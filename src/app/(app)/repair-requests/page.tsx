@@ -368,28 +368,48 @@ export default function RepairRequestsPage() {
           setIsLoading(false)
           return;
       }
-      if (!supabase) {
+      if (!supabase || !user) {
           setIsLoading(false)
           return;
       }
 
-      // Fetch equipment for the search dropdown
-      const { data: equipmentData, error: equipmentError } = await supabase.from('thiet_bi').select('id, ma_thiet_bi, ten_thiet_bi');
-      if (equipmentError) {
+      // Fetch equipment with department-based filtering
+      try {
+        let query = supabase.from('thiet_bi').select('id, ma_thiet_bi, ten_thiet_bi, khoa_phong_quan_ly');
+
+        // Apply department filter for non-admin users
+        const shouldFilterByDepartment = user &&
+          !['admin', 'to_qltb'].includes(user.role) &&
+          user.khoa_phong;
+
+        if (shouldFilterByDepartment) {
+          query = query.eq('khoa_phong_quan_ly', user.khoa_phong);
+        }
+
+        const { data: equipmentData, error: equipmentError } = await query;
+
+        if (equipmentError) {
+          toast({
+            variant: "destructive",
+            title: "Lỗi",
+            description: "Không thể tải danh sách thiết bị. " + equipmentError.message,
+          })
+        } else {
+          setAllEquipment(equipmentData || [])
+        }
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Lỗi",
-          description: "Không thể tải danh sách thiết bị. " + equipmentError.message,
+          description: "Không thể tải danh sách thiết bị. Vui lòng thử lại.",
         })
-      } else {
-        setAllEquipment(equipmentData || [])
       }
 
       // Fetch repair requests (will use cache if available)
       fetchRequests();
     }
     fetchInitialData();
-  }, [toast, fetchRequests])
+  }, [toast, fetchRequests, user])
 
   React.useEffect(() => {
     const equipmentId = searchParams.get('equipmentId');
@@ -407,7 +427,7 @@ export default function RepairRequestsPage() {
 
   const filteredEquipment = React.useMemo(() => {
     if (!searchQuery) return [];
-    
+
     if (selectedEquipment && searchQuery === `${selectedEquipment.ten_thiet_bi} (${selectedEquipment.ma_thiet_bi})`) {
         return [];
     }
@@ -418,6 +438,14 @@ export default function RepairRequestsPage() {
         eq.ma_thiet_bi.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery, allEquipment, selectedEquipment]);
+
+  const shouldShowNoResults = React.useMemo(() => {
+    if (!searchQuery) return false;
+    if (selectedEquipment && searchQuery === `${selectedEquipment.ten_thiet_bi} (${selectedEquipment.ma_thiet_bi})`) {
+        return false;
+    }
+    return filteredEquipment.length === 0;
+  }, [searchQuery, selectedEquipment, filteredEquipment]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setSearchQuery(e.target.value);
@@ -454,41 +482,91 @@ export default function RepairRequestsPage() {
 
     setIsSubmitting(true)
 
-    const { error } = await supabase
-      .from('yeu_cau_sua_chua')
-      .insert({
-        thiet_bi_id: selectedEquipment.id,
-        mo_ta_su_co: issueDescription,
-        hang_muc_sua_chua: repairItems,
-        ngay_mong_muon_hoan_thanh: desiredDate ? format(desiredDate, "yyyy-MM-dd") : null,
-        nguoi_yeu_cau: user.full_name || user.username,
-        trang_thai: 'Chờ xử lý',
-        don_vi_thuc_hien: repairUnit,
-        ten_don_vi_thue: repairUnit === 'thue_ngoai' ? externalCompanyName.trim() : null,
-      });
+    try {
+      // Check department authorization for non-admin users
+      if (!['admin', 'to_qltb'].includes(user.role)) {
+        if (!user.khoa_phong) {
+          toast({
+            variant: "destructive",
+            title: "Không có quyền",
+            description: "Tài khoản chưa được phân công khoa/phòng.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
 
-    if (error) {
+        const { data: equipmentData, error: equipmentError } = await supabase
+          .from('thiet_bi')
+          .select('khoa_phong_quan_ly')
+          .eq('id', selectedEquipment.id)
+          .single();
+
+        if (equipmentError || !equipmentData) {
+          toast({
+            variant: "destructive",
+            title: "Lỗi",
+            description: "Không thể xác thực thiết bị.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (equipmentData.khoa_phong_quan_ly !== user.khoa_phong) {
+          toast({
+            variant: "destructive",
+            title: "Không có quyền",
+            description: "Bạn chỉ có thể tạo yêu cầu sửa chữa cho thiết bị thuộc khoa/phòng của mình.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Create repair request
+      const { error } = await supabase
+        .from('yeu_cau_sua_chua')
+        .insert({
+          thiet_bi_id: selectedEquipment.id,
+          mo_ta_su_co: issueDescription,
+          hang_muc_sua_chua: repairItems,
+          ngay_mong_muon_hoan_thanh: desiredDate ? format(desiredDate, "yyyy-MM-dd") : null,
+          nguoi_yeu_cau: user.full_name || user.username,
+          trang_thai: 'Chờ xử lý',
+          don_vi_thuc_hien: repairUnit,
+          ten_don_vi_thue: repairUnit === 'thue_ngoai' ? externalCompanyName.trim() : null,
+        });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Gửi yêu cầu thất bại",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Thành công",
+          description: "Yêu cầu sửa chữa của bạn đã được gửi đi.",
+        })
+        // Reset form
+        setSelectedEquipment(null)
+        setSearchQuery("")
+        setIssueDescription("")
+        setRepairItems("")
+        setDesiredDate(undefined)
+        setRepairUnit('noi_bo')
+        setExternalCompanyName("")
+        // Invalidate cache and refetch requests
+        invalidateCacheAndRefetch()
+      }
+    } catch (error) {
+      console.error("Repair request creation failed:", error);
       toast({
         variant: "destructive",
-        title: "Gửi yêu cầu thất bại",
-        description: error.message,
+        title: "Lỗi hệ thống",
+        description: "Không thể tạo yêu cầu sửa chữa. Vui lòng thử lại.",
       });
-    } else {
-      toast({
-        title: "Thành công",
-        description: "Yêu cầu sửa chữa của bạn đã được gửi đi.",
-      })
-      // Reset form
-      setSelectedEquipment(null)
-      setSearchQuery("")
-      setIssueDescription("")
-      setRepairItems("")
-      setDesiredDate(undefined)
-      setRepairUnit('noi_bo')
-      setExternalCompanyName("")
-      // Invalidate cache and refetch requests
-      invalidateCacheAndRefetch()
     }
+
     setIsSubmitting(false)
   }
   
@@ -1196,7 +1274,11 @@ export default function RepairRequestsPage() {
                   <div className="relative">
                       <Input
                           id="search-equipment"
-                          placeholder="Nhập tên hoặc mã để tìm kiếm..."
+                          placeholder={
+                            user && !['admin', 'to_qltb'].includes(user.role) && user.khoa_phong
+                              ? `Tìm thiết bị thuộc ${user.khoa_phong}...`
+                              : "Nhập tên hoặc mã để tìm kiếm..."
+                          }
                           value={searchQuery}
                           onChange={handleSearchChange}
                           autoComplete="off"
@@ -1211,11 +1293,27 @@ export default function RepairRequestsPage() {
                                           className="text-sm mobile-interactive hover:bg-accent rounded-sm cursor-pointer touch-target-sm"
                                           onClick={() => handleSelectEquipment(equipment)}
                                       >
-                                          {equipment.ten_thiet_bi} ({equipment.ma_thiet_bi})
+                                          <div className="font-medium">{equipment.ten_thiet_bi}</div>
+                                          <div className="text-xs text-muted-foreground">
+                                            {equipment.ma_thiet_bi}
+                                            {equipment.khoa_phong_quan_ly && (
+                                              <span className="ml-2 text-blue-600">• {equipment.khoa_phong_quan_ly}</span>
+                                            )}
+                                          </div>
                                       </div>
                                   ))}
                               </div>
                           </div>
+                      )}
+                      {shouldShowNoResults && (
+                        <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg p-3">
+                          <div className="text-sm text-muted-foreground text-center">
+                            {user && !['admin', 'to_qltb'].includes(user.role) && user.khoa_phong
+                              ? `Không tìm thấy thiết bị thuộc ${user.khoa_phong} phù hợp với từ khóa "${searchQuery}"`
+                              : `Không tìm thấy thiết bị phù hợp với từ khóa "${searchQuery}"`
+                            }
+                          </div>
+                        </div>
                       )}
                   </div>
                   {selectedEquipment && (
@@ -1223,6 +1321,16 @@ export default function RepairRequestsPage() {
                           <Check className="h-3.5 w-3.5 text-green-600"/>
                           <span>Đã chọn: {selectedEquipment.ten_thiet_bi} ({selectedEquipment.ma_thiet_bi})</span>
                       </p>
+                  )}
+                  {user && !['admin', 'to_qltb'].includes(user.role) && user.khoa_phong && (
+                    <div className="text-xs text-muted-foreground">
+                      💡 Bạn chỉ có thể tạo yêu cầu sửa chữa cho thiết bị thuộc khoa/phòng: <span className="font-medium text-blue-600">{user.khoa_phong}</span>
+                    </div>
+                  )}
+                  {user && (!user.khoa_phong || user.khoa_phong === '') && !['admin', 'to_qltb'].includes(user.role) && (
+                    <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border">
+                      ⚠️ Tài khoản của bạn chưa được phân công khoa/phòng. Vui lòng liên hệ quản trị viên để được cấp quyền tạo yêu cầu sửa chữa.
+                    </div>
                   )}
                 </div>
                 <div className="space-y-2">
