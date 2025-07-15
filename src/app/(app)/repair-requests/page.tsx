@@ -243,6 +243,8 @@ export default function RepairRequestsPage() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const debouncedSearch = useSearchDebounce(searchTerm);
+
+  const canSetRepairUnit = user && ['admin', 'to_qltb'].includes(user.role);
   
   React.useEffect(() => {
     if (editingRequest) {
@@ -532,8 +534,8 @@ export default function RepairRequestsPage() {
           ngay_mong_muon_hoan_thanh: desiredDate ? format(desiredDate, "yyyy-MM-dd") : null,
           nguoi_yeu_cau: user.full_name || user.username,
           trang_thai: 'Chờ xử lý',
-          don_vi_thuc_hien: repairUnit,
-          ten_don_vi_thue: repairUnit === 'thue_ngoai' ? externalCompanyName.trim() : null,
+          don_vi_thuc_hien: canSetRepairUnit ? repairUnit : null,
+          ten_don_vi_thue: canSetRepairUnit && repairUnit === 'thue_ngoai' ? externalCompanyName.trim() : null,
         });
 
       if (error) {
@@ -677,8 +679,8 @@ export default function RepairRequestsPage() {
         mo_ta_su_co: editIssueDescription,
         hang_muc_sua_chua: editRepairItems,
         ngay_mong_muon_hoan_thanh: editDesiredDate ? format(editDesiredDate, "yyyy-MM-dd") : null,
-        don_vi_thuc_hien: editRepairUnit,
-        ten_don_vi_thue: editRepairUnit === 'thue_ngoai' ? editExternalCompanyName.trim() : null,
+        don_vi_thuc_hien: canSetRepairUnit ? editRepairUnit : editingRequest.don_vi_thuc_hien,
+        ten_don_vi_thue: canSetRepairUnit && editRepairUnit === 'thue_ngoai' ? editExternalCompanyName.trim() : (canSetRepairUnit ? null : editingRequest.ten_don_vi_thue),
       })
       .eq('id', editingRequest.id);
 
@@ -1075,6 +1077,9 @@ export default function RepairRequestsPage() {
       header: "Đơn vị thực hiện",
       cell: ({ row }) => {
         const request = row.original
+        if (!request.don_vi_thuc_hien) {
+          return <Badge variant="outline" className="self-start">Chưa xác định</Badge>;
+        }
         return (
           <div className="flex flex-col gap-1">
             <Badge variant={request.don_vi_thuc_hien === 'noi_bo' ? 'default' : 'secondary'} className="self-start">
@@ -1187,20 +1192,22 @@ export default function RepairRequestsPage() {
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-repair-unit">Đơn vị thực hiện</Label>
-                <Select value={editRepairUnit} onValueChange={(value: 'noi_bo' | 'thue_ngoai') => setEditRepairUnit(value)}>
-                  <SelectTrigger className="touch-target">
-                    <SelectValue placeholder="Chọn đơn vị thực hiện" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="noi_bo">Nội bộ</SelectItem>
-                    <SelectItem value="thue_ngoai">Thuê ngoài</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {canSetRepairUnit && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-repair-unit">Đơn vị thực hiện</Label>
+                  <Select value={editRepairUnit} onValueChange={(value: 'noi_bo' | 'thue_ngoai') => setEditRepairUnit(value)}>
+                    <SelectTrigger className="touch-target">
+                      <SelectValue placeholder="Chọn đơn vị thực hiện" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="noi_bo">Nội bộ</SelectItem>
+                      <SelectItem value="thue_ngoai">Thuê ngoài</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              {editRepairUnit === 'thue_ngoai' && (
+              {canSetRepairUnit && editRepairUnit === 'thue_ngoai' && (
                 <div className="space-y-2">
                   <Label htmlFor="edit-external-company">Tên đơn vị được thuê</Label>
                   <Input
@@ -1381,20 +1388,22 @@ export default function RepairRequestsPage() {
                       </Popover>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="repair-unit">Đơn vị thực hiện</Label>
-                  <Select value={repairUnit} onValueChange={(value: 'noi_bo' | 'thue_ngoai') => setRepairUnit(value)}>
-                    <SelectTrigger className="touch-target">
-                      <SelectValue placeholder="Chọn đơn vị thực hiện" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="noi_bo">Nội bộ</SelectItem>
-                      <SelectItem value="thue_ngoai">Thuê ngoài</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {canSetRepairUnit && (
+                  <div className="space-y-2">
+                    <Label htmlFor="repair-unit">Đơn vị thực hiện</Label>
+                    <Select value={repairUnit} onValueChange={(value: 'noi_bo' | 'thue_ngoai') => setRepairUnit(value)}>
+                      <SelectTrigger className="touch-target">
+                        <SelectValue placeholder="Chọn đơn vị thực hiện" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="noi_bo">Nội bộ</SelectItem>
+                        <SelectItem value="thue_ngoai">Thuê ngoài</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-                {repairUnit === 'thue_ngoai' && (
+                {canSetRepairUnit && repairUnit === 'thue_ngoai' && (
                   <div className="space-y-2">
                     <Label htmlFor="external-company">Tên đơn vị được thuê</Label>
                     <Input
