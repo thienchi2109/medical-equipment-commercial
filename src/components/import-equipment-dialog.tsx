@@ -19,6 +19,47 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import type { Equipment } from "@/lib/data"
 
+// Required fields for equipment validation
+const REQUIRED_FIELDS = {
+  'khoa_phong_quan_ly': 'Khoa/phòng quản lý',
+  'nguoi_dang_truc_tiep_quan_ly': 'Người sử dụng',
+  'tinh_trang_hien_tai': 'Tình trạng',
+  'vi_tri_lap_dat': 'Vị trí lắp đặt'
+} as const;
+
+// Validation function for equipment data
+const validateEquipmentData = (data: Partial<Equipment>[], headerMapping: Record<string, string>) => {
+  const errors: string[] = [];
+  const validationResults: { isValid: boolean; missingFields: string[] }[] = [];
+
+  data.forEach((item, index) => {
+    const missingFields: string[] = [];
+
+    // Check each required field
+    Object.entries(REQUIRED_FIELDS).forEach(([dbKey, displayName]) => {
+      const value = item[dbKey as keyof Equipment];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(displayName);
+      }
+    });
+
+    validationResults.push({
+      isValid: missingFields.length === 0,
+      missingFields
+    });
+
+    if (missingFields.length > 0) {
+      errors.push(`Dòng ${index + 2}: Thiếu ${missingFields.join(', ')}`);
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    validationResults
+  };
+};
+
 // This mapping is crucial for converting Excel headers to database columns.
 const headerToDbKeyMap: Record<string, string> = {
     'Mã thiết bị': 'ma_thiet_bi',
@@ -64,6 +105,7 @@ export function ImportEquipmentDialog({ open, onOpenChange, onSuccess }: ImportE
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
   const [parsedData, setParsedData] = React.useState<Partial<Equipment>[]>([])
   const [error, setError] = React.useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = React.useState<string[]>([])
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const resetState = () => {
@@ -71,6 +113,7 @@ export function ImportEquipmentDialog({ open, onOpenChange, onSuccess }: ImportE
     setSelectedFile(null)
     setParsedData([])
     setError(null)
+    setValidationErrors([])
     if (fileInputRef.current) {
         fileInputRef.current.value = ""
     }
@@ -116,6 +159,15 @@ export function ImportEquipmentDialog({ open, onOpenChange, onSuccess }: ImportE
             }
             return newRow
         })
+
+        // Validate the transformed data
+        const validation = validateEquipmentData(transformedData, headerToDbKeyMap);
+        if (!validation.isValid) {
+            setValidationErrors(validation.errors);
+        } else {
+            setValidationErrors([]);
+        }
+
         setParsedData(transformedData)
     } catch (err: any) {
         setError("Đã có lỗi xảy ra khi đọc file: " + err.message)
@@ -132,6 +184,17 @@ export function ImportEquipmentDialog({ open, onOpenChange, onSuccess }: ImportE
       })
       return
     }
+
+    // Check validation before importing
+    if (validationErrors.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Dữ liệu không hợp lệ",
+        description: "Vui lòng kiểm tra và sửa các lỗi trước khi nhập dữ liệu."
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       // Supabase insert expects objects without undefined keys.
@@ -200,11 +263,24 @@ export function ImportEquipmentDialog({ open, onOpenChange, onSuccess }: ImportE
                     <span>{error}</span>
                 </div>
             )}
-            {selectedFile && !error && (
+            {validationErrors.length > 0 && (
+                <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="font-medium">Dữ liệu không hợp lệ:</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 ml-6">
+                        {validationErrors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            {selectedFile && !error && validationErrors.length === 0 && (
                 <div className="flex items-center gap-2 text-sm text-primary bg-primary/10 p-3 rounded-md">
                     <FileCheck className="h-4 w-4" />
                     <span>
-                        Đã đọc file <strong>{selectedFile.name}</strong>. Tìm thấy <strong>{parsedData.length}</strong> bản ghi.
+                        Đã đọc file <strong>{selectedFile.name}</strong>. Tìm thấy <strong>{parsedData.length}</strong> bản ghi hợp lệ.
                     </span>
                 </div>
             )}
@@ -213,10 +289,10 @@ export function ImportEquipmentDialog({ open, onOpenChange, onSuccess }: ImportE
           <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button 
-            type="button" 
-            onClick={handleImport} 
-            disabled={isSubmitting || !selectedFile || error !== null || parsedData.length === 0}
+          <Button
+            type="button"
+            onClick={handleImport}
+            disabled={isSubmitting || !selectedFile || error !== null || parsedData.length === 0 || validationErrors.length > 0}
             >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSubmitting ? "Đang nhập..." : `Nhập ${parsedData.length} thiết bị`}

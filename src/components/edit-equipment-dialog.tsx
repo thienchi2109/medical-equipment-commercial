@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { RequiredFormLabel } from "@/components/ui/required-form-label"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
@@ -31,14 +32,14 @@ import { supabase } from "@/lib/supabase"
 import { type Equipment } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const equipmentStatusOptions: (Equipment['tinh_trang_hien_tai'])[] = [
-    "Hoạt động", 
-    "Chờ sửa chữa", 
-    "Chờ bảo trì", 
-    "Chờ hiệu chuẩn/kiểm định", 
-    "Ngưng sử dụng", 
+const equipmentStatusOptions = [
+    "Hoạt động",
+    "Chờ sửa chữa",
+    "Chờ bảo trì",
+    "Chờ hiệu chuẩn/kiểm định",
+    "Ngưng sử dụng",
     "Chưa có nhu cầu sử dụng"
-];
+] as const;
 
 
 const equipmentFormSchema = z.object({
@@ -54,10 +55,10 @@ const equipmentFormSchema = z.object({
   nguon_kinh_phi: z.string().optional().nullable(),
   gia_goc: z.coerce.number().optional().nullable(),
   han_bao_hanh: z.string().optional().nullable(),
-  vi_tri_lap_dat: z.string().optional().nullable(),
-  khoa_phong_quan_ly: z.string().optional().nullable(),
-  nguoi_dang_truc_tiep_quan_ly: z.string().optional().nullable(),
-  tinh_trang_hien_tai: z.enum(equipmentStatusOptions).optional().nullable(),
+  vi_tri_lap_dat: z.string().min(1, "Vị trí lắp đặt là bắt buộc").nullable().transform(val => val || ""),
+  khoa_phong_quan_ly: z.string().min(1, "Khoa/Phòng quản lý là bắt buộc").nullable().transform(val => val || ""),
+  nguoi_dang_truc_tiep_quan_ly: z.string().min(1, "Người trực tiếp quản lý (sử dụng) là bắt buộc").nullable().transform(val => val || ""),
+  tinh_trang_hien_tai: z.enum(equipmentStatusOptions, { required_error: "Tình trạng hiện tại là bắt buộc" }).nullable().transform(val => val || "" as any),
   cau_hinh_thiet_bi: z.string().optional().nullable(),
   phu_kien_kem_theo: z.string().optional().nullable(),
   ghi_chu: z.string().optional().nullable(),
@@ -208,21 +209,21 @@ export function EditEquipmentDialog({ open, onOpenChange, onSuccess, equipment }
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="khoa_phong_quan_ly" render={({ field }) => (
-                        <FormItem><FormLabel>Khoa/Phòng quản lý</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><RequiredFormLabel required>Khoa/Phòng quản lý</RequiredFormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="vi_tri_lap_dat" render={({ field }) => (
-                        <FormItem><FormLabel>Vị trí lắp đặt</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><RequiredFormLabel required>Vị trí lắp đặt</RequiredFormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </div>
                  <FormField control={form.control} name="nguoi_dang_truc_tiep_quan_ly" render={({ field }) => (
-                    <FormItem><FormLabel>Người trực tiếp quản lý (sử dụng)</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><RequiredFormLabel required>Người trực tiếp quản lý (sử dụng)</RequiredFormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField
                     control={form.control}
                     name="tinh_trang_hien_tai"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Tình trạng hiện tại</FormLabel>
+                        <RequiredFormLabel required>Tình trạng hiện tại</RequiredFormLabel>
                         <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                             <FormControl>
                             <SelectTrigger>

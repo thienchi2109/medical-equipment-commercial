@@ -1061,7 +1061,7 @@ export default function MaintenancePage() {
             <td><input type="checkbox" ${noiBoChecked}></td>
             <td><input type="checkbox" ${thueNgoaiChecked}></td>
             ${checkboxes}
-            <td><input type="text" value="${formatValue(task.diem_hieu_chuan)}"></td>
+            <td><textarea class="auto-resize-textarea" rows="2" style="width: 100%; border: none; outline: none; background: transparent; resize: none; word-wrap: break-word; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all; line-height: 1.2; padding: 4px; font-family: inherit; font-size: 10px; overflow: visible;">${formatValue(task.ghi_chu)}</textarea></td>
           </tr>
         `;
       }).join('');
@@ -1115,7 +1115,13 @@ export default function MaintenancePage() {
         .title-sub { font-size: 16px; }
 
         /* Table styles */
-        .data-table, .data-table th, .data-table td {
+        .data-table {
+            border: 1px solid #000;
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+        .data-table th, .data-table td {
             border: 1px solid #000;
             border-collapse: collapse;
         }
@@ -1123,17 +1129,76 @@ export default function MaintenancePage() {
             padding: 4px;
             text-align: center;
             vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .data-table tbody tr {
-             height: 35px; /* Chiều cao cho các dòng dữ liệu */
+             min-height: 35px; /* Chiều cao tối thiểu cho các dòng dữ liệu */
+             height: auto !important; /* Cho phép chiều cao tự động mở rộng */
+        }
+        /* Đặc biệt cho các row có text dài trong cột cuối */
+        .data-table tbody tr:has(td:last-child textarea[value*=" "]) {
+             height: auto !important;
+             min-height: 50px !important;
+        }
+        /* Đặc biệt cho cột Điểm BT/HC/KĐ */
+        .data-table td:last-child {
+            width: 150px !important;
+            min-width: 150px;
+            max-width: 200px;
+            padding: 8px !important;
+            vertical-align: top !important;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
         .data-table input[type="text"] {
             width: 100%;
-            height: 100%;
+            min-height: 30px;
+            height: auto !important;
             border: none;
             outline: none;
             background-color: transparent;
-            text-align: center;
+            text-align: left !important;
+            word-wrap: break-word;
+            white-space: normal !important;
+            overflow-wrap: break-word;
+            line-height: 1.3;
+            padding: 2px 4px;
+            resize: none;
+            overflow: visible;
+        }
+        /* Đặc biệt cho input trong cột cuối cùng (Điểm BT/HC/KĐ) */
+        .data-table td:last-child input[type="text"] {
+            text-align: left !important;
+            white-space: pre-wrap !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            min-height: 40px;
+            height: auto !important;
+            line-height: 1.4;
+            padding: 4px;
+        }
+        /* CSS cho textarea trong cột cuối */
+        .data-table td:last-child textarea {
+            width: 100% !important;
+            min-height: 40px !important;
+            height: auto !important;
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            resize: none !important;
+            word-wrap: break-word !important;
+            white-space: pre-wrap !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-all !important;
+            line-height: 1.2 !important;
+            padding: 4px !important;
+            font-family: inherit !important;
+            font-size: 10px !important; /* Thu nhỏ font size cho cột này */
+            text-align: left !important;
+            overflow: visible !important;
+            max-height: none !important;
         }
 
         /* Signature styles */
@@ -1170,6 +1235,39 @@ export default function MaintenancePage() {
             .data-table tr, .signature-area {
                 page-break-inside: avoid;
             }
+            /* Đặc biệt cho print: đảm bảo text trong cột cuối không bị cắt */
+            .data-table td:last-child {
+                width: 15% !important;
+                min-width: 150px !important;
+                max-width: none !important;
+            }
+            .data-table td:last-child input[type="text"],
+            .data-table td:last-child textarea {
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                height: auto !important;
+                min-height: 40px !important;
+                line-height: 1.3 !important;
+                overflow: visible !important;
+            }
+            /* Đảm bảo textarea hiển thị đầy đủ khi in */
+            .data-table td:last-child textarea {
+                resize: none !important;
+                border: none !important;
+                background: transparent !important;
+                font-family: inherit !important;
+                font-size: 10px !important; /* Font nhỏ hơn khi in */
+                max-height: none !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            /* Đảm bảo row có thể mở rộng khi in */
+            .data-table tbody tr {
+                height: auto !important;
+                min-height: 40px !important;
+                page-break-inside: avoid;
+            }
             /* Cố định footer ở cuối mỗi trang in */
             .print-footer {
                 position: fixed;
@@ -1183,6 +1281,45 @@ export default function MaintenancePage() {
             }
         }
     </style>
+    <script>
+        // Auto-resize textarea function
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            const scrollHeight = textarea.scrollHeight;
+            const minHeight = 40;
+            const maxHeight = 120;
+            const newHeight = Math.max(minHeight, Math.min(maxHeight, scrollHeight));
+            textarea.style.height = newHeight + 'px';
+
+            // Adjust font size based on content length
+            const textLength = textarea.value.length;
+            if (textLength > 100) {
+                textarea.style.fontSize = '9px';
+            } else if (textLength > 50) {
+                textarea.style.fontSize = '10px';
+            } else {
+                textarea.style.fontSize = '11px';
+            }
+        }
+
+        // Initialize auto-resize for all textareas when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const textareas = document.querySelectorAll('.auto-resize-textarea');
+            textareas.forEach(function(textarea) {
+                // Initial resize
+                autoResizeTextarea(textarea);
+
+                // Add event listeners for dynamic resizing
+                textarea.addEventListener('input', function() {
+                    autoResizeTextarea(this);
+                });
+
+                textarea.addEventListener('paste', function() {
+                    setTimeout(() => autoResizeTextarea(this), 10);
+                });
+            });
+        });
+    </script>
 </head>
 <body>
 
@@ -1217,28 +1354,28 @@ export default function MaintenancePage() {
                     <thead class="font-bold">
                         <tr>
                             <th rowspan="2" class="w-[3%]">TT</th>
-                            <th rowspan="2" class="w-[8%]">Mã TB</th>
-                            <th rowspan="2" class="w-[15%]">Tên TB</th>
-                            <th rowspan="2" class="w-[12%]">Khoa/Phòng sử dụng</th>
+                            <th rowspan="2" class="w-[7%]">Mã TB</th>
+                            <th rowspan="2" class="w-[12%]">Tên TB</th>
+                            <th rowspan="2" class="w-[10%]">Khoa/Phòng sử dụng</th>
                             <th colspan="2">Đơn vị thực hiện</th>
                             <th colspan="12">Thời gian dự kiến ${selectedPlan.loai_cong_viec.toLowerCase()} (tháng)</th>
-                            <th rowspan="2" class="w-[8%]">Điểm ${selectedPlan.loai_cong_viec.toLowerCase()}</th>
+                            <th rowspan="2" class="w-[15%]">Điểm BT/HC/KĐ</th>
                         </tr>
                         <tr>
-                            <th class="w-[5%]">Nội bộ</th>
-                            <th class="w-[5%]">Thuê ngoài</th>
-                            <th class="w-[2.5%]">1</th>
-                            <th class="w-[2.5%]">2</th>
-                            <th class="w-[2.5%]">3</th>
-                            <th class="w-[2.5%]">4</th>
-                            <th class="w-[2.5%]">5</th>
-                            <th class="w-[2.5%]">6</th>
-                            <th class="w-[2.5%]">7</th>
-                            <th class="w-[2.5%]">8</th>
-                            <th class="w-[2.5%]">9</th>
-                            <th class="w-[2.5%]">10</th>
-                            <th class="w-[2.5%]">11</th>
-                            <th class="w-[2.5%]">12</th>
+                            <th class="w-[4%]">Nội bộ</th>
+                            <th class="w-[4%]">Thuê ngoài</th>
+                            <th class="w-[2%]">1</th>
+                            <th class="w-[2%]">2</th>
+                            <th class="w-[2%]">3</th>
+                            <th class="w-[2%]">4</th>
+                            <th class="w-[2%]">5</th>
+                            <th class="w-[2%]">6</th>
+                            <th class="w-[2%]">7</th>
+                            <th class="w-[2%]">8</th>
+                            <th class="w-[2%]">9</th>
+                            <th class="w-[2%]">10</th>
+                            <th class="w-[2%]">11</th>
+                            <th class="w-[2%]">12</th>
                         </tr>
                     </thead>
                     <tbody id="plan-table-body">

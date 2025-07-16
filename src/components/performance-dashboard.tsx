@@ -264,7 +264,7 @@ export function PerformanceDashboard() {
                   <span className="font-medium">{metrics.totalQueries}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Slow Queries (>1s):</span>
+                  <span className="text-sm">Slow Queries (&gt;1s):</span>
                   <span className="font-medium">{metrics.slowQueries}</span>
                 </div>
                 <div className="flex justify-between">

@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { RequiredFormLabel } from "@/components/ui/required-form-label"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -56,10 +57,10 @@ const equipmentFormSchema = z.object({
   nguon_kinh_phi: z.string().optional(),
   gia_goc: z.coerce.number().optional().nullable(),
   han_bao_hanh: z.string().optional(),
-  vi_tri_lap_dat: z.string().optional(),
-  khoa_phong_quan_ly: z.string().optional(),
-  nguoi_dang_truc_tiep_quan_ly: z.string().optional(),
-  tinh_trang_hien_tai: z.enum(equipmentStatusOptions).optional(),
+  vi_tri_lap_dat: z.string().min(1, "Vị trí lắp đặt là bắt buộc"),
+  khoa_phong_quan_ly: z.string().min(1, "Khoa/Phòng quản lý là bắt buộc"),
+  nguoi_dang_truc_tiep_quan_ly: z.string().min(1, "Người trực tiếp quản lý (sử dụng) là bắt buộc"),
+  tinh_trang_hien_tai: z.enum(equipmentStatusOptions, { required_error: "Tình trạng hiện tại là bắt buộc" }),
   cau_hinh_thiet_bi: z.string().optional(),
   phu_kien_kem_theo: z.string().optional(),
   ghi_chu: z.string().optional(),
@@ -95,7 +96,7 @@ export function AddEquipmentDialog({ open, onOpenChange, onSuccess }: AddEquipme
       vi_tri_lap_dat: "",
       khoa_phong_quan_ly: "",
       nguoi_dang_truc_tiep_quan_ly: "",
-      tinh_trang_hien_tai: undefined,
+      tinh_trang_hien_tai: "" as any,
       cau_hinh_thiet_bi: "",
       phu_kien_kem_theo: "",
       ghi_chu: "",
@@ -272,7 +273,7 @@ export function AddEquipmentDialog({ open, onOpenChange, onSuccess }: AddEquipme
                       name="khoa_phong_quan_ly"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Khoa/Phòng quản lý</FormLabel>
+                          <RequiredFormLabel required>Khoa/Phòng quản lý</RequiredFormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Nhập hoặc chọn khoa/phòng"/>
                           </FormControl>
@@ -295,18 +296,18 @@ export function AddEquipmentDialog({ open, onOpenChange, onSuccess }: AddEquipme
                       )}
                     />
                     <FormField control={form.control} name="vi_tri_lap_dat" render={({ field }) => (
-                        <FormItem><FormLabel>Vị trí lắp đặt</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><RequiredFormLabel required>Vị trí lắp đặt</RequiredFormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </div>
                  <FormField control={form.control} name="nguoi_dang_truc_tiep_quan_ly" render={({ field }) => (
-                    <FormItem><FormLabel>Người trực tiếp quản lý (sử dụng)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><RequiredFormLabel required>Người trực tiếp quản lý (sử dụng)</RequiredFormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField
                     control={form.control}
                     name="tinh_trang_hien_tai"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Tình trạng hiện tại</FormLabel>
+                        <RequiredFormLabel required>Tình trạng hiện tại</RequiredFormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                             <SelectTrigger>
