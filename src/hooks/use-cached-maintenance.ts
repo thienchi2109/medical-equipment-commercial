@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/use-toast'
@@ -18,8 +19,6 @@ export const maintenanceKeys = {
 // Fetch maintenance plans (ke_hoach_bao_tri)
 export function useMaintenancePlans(filters?: {
   search?: string
-  nam?: number
-  trang_thai?: string
 }) {
   return useQuery({
     queryKey: maintenanceKeys.plan(filters || {}),
@@ -30,19 +29,25 @@ export function useMaintenancePlans(filters?: {
 
       let query = supabase
         .from('ke_hoach_bao_tri')
-        .select('*')
+        .select(`
+          id,
+          created_at,
+          ten_ke_hoach,
+          nam,
+          khoa_phong,
+          trang_thai,
+          ngay_phe_duyet,
+          nguoi_duyet,
+          nguoi_lap_ke_hoach,
+          loai_cong_viec,
+          ly_do_khong_duyet
+        `)
         .order('nam', { ascending: false })
         .order('created_at', { ascending: false })
 
-      // Apply filters
+      // Apply search filter
       if (filters?.search) {
-        query = query.or(`ten_ke_hoach.ilike.%${filters.search}%,mo_ta.ilike.%${filters.search}%`)
-      }
-      if (filters?.trang_thai) {
-        query = query.eq('trang_thai', filters.trang_thai)
-      }
-      if (filters?.nam) {
-        query = query.eq('nam', filters.nam)
+        query = query.or(`ten_ke_hoach.ilike.%${filters.search}%,khoa_phong.ilike.%${filters.search}%,nguoi_lap_ke_hoach.ilike.%${filters.search}%`)
       }
 
       const { data, error } = await query

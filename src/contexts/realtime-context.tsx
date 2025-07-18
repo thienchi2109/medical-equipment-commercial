@@ -92,23 +92,23 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
       case 'thiet_bi':
         // Equipment changes affect multiple areas
         // Use proper query keys from hooks
-        debouncedInvalidate([...equipmentKeys.all]) // ['equipment'] - invalidates all equipment queries
-        debouncedInvalidate([...dashboardStatsKeys.all]) // ['dashboard-stats'] - invalidates dashboard
+        debouncedInvalidate(['equipment']) // ['equipment'] - invalidates all equipment queries
+        debouncedInvalidate(dashboardStatsKeys.all) // ['dashboard-stats'] - invalidates dashboard
         debouncedInvalidate(['reports'])
         debouncedInvalidate(['equipment-distribution'])
         break
 
       case 'yeu_cau_sua_chua':
         // Repair request changes
-        debouncedInvalidate([...repairKeys.all]) // ['repair'] - invalidates all repair queries
-        debouncedInvalidate([...dashboardStatsKeys.all]) // ['dashboard-stats']
+        debouncedInvalidate(repairKeys.all) // ['repair'] - invalidates all repair queries
+        debouncedInvalidate(dashboardStatsKeys.all) // ['dashboard-stats']
         debouncedInvalidate(['reports'])
         break
 
       case 'ke_hoach_bao_tri':
         // Maintenance plan changes
-        debouncedInvalidate([...maintenanceKeys.all]) // ['maintenance'] - invalidates all maintenance queries
-        debouncedInvalidate([...dashboardStatsKeys.all]) // ['dashboard-stats']
+        debouncedInvalidate(maintenanceKeys.all) // ['maintenance'] - invalidates all maintenance queries
+        debouncedInvalidate(dashboardStatsKeys.all) // ['dashboard-stats']
         debouncedInvalidate(['calendar-events'])
         break
 

@@ -42,6 +42,7 @@ export type MaintenancePlan = {
   khoa_phong: string | null;
   trang_thai: "Bản nháp" | "Đã duyệt" | "Không duyệt";
   ngay_phe_duyet: string | null;
+  nguoi_duyet: string | null;
   nguoi_lap_ke_hoach: string | null;
   loai_cong_viec: TaskType;
   ly_do_khong_duyet?: string | null;

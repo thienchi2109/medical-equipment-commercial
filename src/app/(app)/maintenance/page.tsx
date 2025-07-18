@@ -76,6 +76,7 @@ import { BulkScheduleDialog } from "@/components/bulk-schedule-dialog"
 import { useMaintenancePlans, useCreateMaintenancePlan, useUpdateMaintenancePlan, useDeleteMaintenancePlan, maintenanceKeys } from "@/hooks/use-cached-maintenance"
 import { useQueryClient } from "@tanstack/react-query"
 import { useMaintenanceRealtimeSync } from "@/hooks/use-realtime-sync"
+import { useSearchDebounce } from "@/hooks/use-debounce"
 
 export default function MaintenancePage() {
   const { toast } = useToast()
@@ -87,8 +88,14 @@ export default function MaintenancePage() {
   // Temporarily disable useRealtimeSync to avoid conflict with RealtimeProvider
   // useMaintenanceRealtimeSync()
 
+  // Search state for plans
+  const [planSearchTerm, setPlanSearchTerm] = React.useState("");
+  const debouncedPlanSearch = useSearchDebounce(planSearchTerm);
+
   // ✅ Use cached hooks for data fetching, keep manual mutations for now
-  const { data: plans = [], isLoading: isLoadingPlans, refetch: refetchPlans } = useMaintenancePlans()
+  const { data: plans = [], isLoading: isLoadingPlans, refetch: refetchPlans } = useMaintenancePlans(
+    debouncedPlanSearch ? { search: debouncedPlanSearch } : undefined
+  )
   // TODO: Migrate to cached mutations later
   // const createMaintenancePlan = useCreateMaintenancePlan()
   // const updateMaintenancePlan = useUpdateMaintenancePlan()
@@ -306,7 +313,11 @@ export default function MaintenancePage() {
 
     const { error } = await supabase
       .from('ke_hoach_bao_tri')
-      .update({ trang_thai: 'Đã duyệt', ngay_phe_duyet: new Date().toISOString() })
+      .update({
+        trang_thai: 'Đã duyệt',
+        ngay_phe_duyet: new Date().toISOString(),
+        nguoi_duyet: user?.full_name || user?.username || ''
+      })
       .eq('id', planToApprove.id);
 
     if (error) {
@@ -332,6 +343,7 @@ export default function MaintenancePage() {
       .update({
         trang_thai: 'Không duyệt',
         ngay_phe_duyet: new Date().toISOString(),
+        nguoi_duyet: user?.full_name || user?.username || '',
         ly_do_khong_duyet: rejectionReason.trim()
       })
       .eq('id', planToReject.id);
@@ -527,14 +539,22 @@ export default function MaintenancePage() {
                     )}
                   </div>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start">
                   <span className="text-muted-foreground">Ngày phê duyệt:</span>
-                  <span className="text-right">
-                    {plan.ngay_phe_duyet
-                      ? format(parseISO(plan.ngay_phe_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })
-                      : <span className="text-muted-foreground italic">Chưa duyệt</span>
-                    }
-                  </span>
+                  <div className="text-right space-y-1">
+                    {plan.ngay_phe_duyet ? (
+                      <>
+                        <div>{format(parseISO(plan.ngay_phe_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}</div>
+                        {plan.nguoi_duyet && (
+                          <div className="text-xs text-blue-600 font-medium">
+                            Duyệt: {plan.nguoi_duyet}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground italic">Chưa duyệt</span>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -638,7 +658,19 @@ export default function MaintenancePage() {
       header: "Ngày phê duyệt",
       cell: ({ row }) => {
         const date = row.getValue("ngay_phe_duyet") as string | null
-        return date ? format(parseISO(date), 'dd/MM/yyyy HH:mm', { locale: vi }) : <span className="text-muted-foreground italic">Chưa duyệt</span>
+        const plan = row.original
+        return date ? (
+          <div className="space-y-1">
+            <div>{format(parseISO(date), 'dd/MM/yyyy HH:mm', { locale: vi })}</div>
+            {plan.nguoi_duyet && (
+              <div className="text-xs text-blue-600 font-medium">
+                Duyệt: {plan.nguoi_duyet}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground italic">Chưa duyệt</span>
+        )
       },
     },
     {
@@ -1591,6 +1623,17 @@ export default function MaintenancePage() {
                 Sau khi duyệt, kế hoạch <strong>{planToApprove.ten_ke_hoach}</strong> sẽ bị khóa. Bạn sẽ không thể thêm, sửa, hoặc xóa công việc khỏi kế hoạch này nữa. Hành động này không thể hoàn tác.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {planToApprove.nguoi_duyet && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-sm font-medium text-blue-800">Đã được duyệt bởi:</div>
+                <div className="text-sm text-blue-600">{planToApprove.nguoi_duyet}</div>
+                {planToApprove.ngay_phe_duyet && (
+                  <div className="text-xs text-blue-500">
+                    {format(parseISO(planToApprove.ngay_phe_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                  </div>
+                )}
+              </div>
+            )}
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isApprovingPlan}>Hủy</AlertDialogCancel>
               <AlertDialogAction onClick={() => handleApprovePlan(planToApprove)} disabled={isApprovingPlan}>
@@ -1610,6 +1653,17 @@ export default function MaintenancePage() {
                 Bạn đang từ chối kế hoạch <strong>{planToReject.ten_ke_hoach}</strong>. Vui lòng nhập lý do không duyệt:
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {planToReject.nguoi_duyet && (
+              <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                <div className="text-sm font-medium text-red-800">Đã được từ chối bởi:</div>
+                <div className="text-sm text-red-600">{planToReject.nguoi_duyet}</div>
+                {planToReject.ngay_phe_duyet && (
+                  <div className="text-xs text-red-500">
+                    {format(parseISO(planToReject.ngay_phe_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="py-4">
               <textarea
                 className="w-full min-h-[100px] p-3 border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
@@ -1735,6 +1789,28 @@ export default function MaintenancePage() {
               </Button>
             </CardHeader>
             <CardContent>
+              {/* Search Section */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Tìm kiếm theo tên kế hoạch, khoa/phòng, người lập..."
+                    value={planSearchTerm}
+                    onChange={(e) => setPlanSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                  />
+                </div>
+                {planSearchTerm && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPlanSearchTerm("")}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Xóa tìm kiếm
+                  </Button>
+                )}
+              </div>
+
               {isMobile ? (
                 renderMobileCards()
               ) : (

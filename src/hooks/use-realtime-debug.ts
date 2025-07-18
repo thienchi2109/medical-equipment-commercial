@@ -95,12 +95,12 @@ export function useRealtimeDebug() {
     // Manual invalidation functions for testing
     invalidateDashboard: () => {
       console.log('[RealtimeDebug] Manually invalidating dashboard queries...')
-      queryClient.invalidateQueries({ queryKey: [...dashboardStatsKeys.all] })
-      queryClient.invalidateQueries({ queryKey: [...dashboardStatsKeys.totalEquipment()] })
-      queryClient.invalidateQueries({ queryKey: [...dashboardStatsKeys.maintenanceCount()] })
-      queryClient.invalidateQueries({ queryKey: [...dashboardStatsKeys.repairRequests()] })
-      queryClient.invalidateQueries({ queryKey: [...dashboardStatsKeys.maintenancePlans()] })
-      queryClient.invalidateQueries({ queryKey: [...dashboardStatsKeys.equipmentAttention()] })
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.all })
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.totalEquipment() })
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.maintenanceCount() })
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.repairRequests() })
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.maintenancePlans() })
+      queryClient.invalidateQueries({ queryKey: dashboardStatsKeys.equipmentAttention() })
     },
 
     refetchDashboard: () => {

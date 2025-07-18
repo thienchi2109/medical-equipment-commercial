@@ -136,7 +136,7 @@ export function useUpdateEquipment() {
     },
     onSuccess: (data) => {
       // Invalidate and refetch equipment lists
-      queryClient.invalidateQueries({ queryKey: equipmentKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: ['equipment'] })
       // Update specific equipment detail cache
       queryClient.setQueryData(equipmentKeys.detail(data.id), data)
       // Invalidate dashboard stats to update KPI cards
@@ -178,7 +178,7 @@ export function useCreateEquipment() {
     },
     onSuccess: () => {
       // Invalidate all equipment queries to refetch data
-      queryClient.invalidateQueries({ queryKey: equipmentKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['equipment'] })
       // Invalidate dashboard stats to update KPI cards
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
 
@@ -216,7 +216,7 @@ export function useDeleteEquipment() {
     },
     onSuccess: () => {
       // Invalidate all equipment queries
-      queryClient.invalidateQueries({ queryKey: equipmentKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['equipment'] })
       // Invalidate dashboard stats to update KPI cards
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
 

@@ -82,6 +82,8 @@ export type RepairRequestWithEquipment = {
   nguoi_yeu_cau: string | null;
   ngay_duyet: string | null;
   ngay_hoan_thanh: string | null;
+  nguoi_duyet: string | null;
+  nguoi_xac_nhan: string | null;
   don_vi_thuc_hien: 'noi_bo' | 'thue_ngoai' | null;
   ten_don_vi_thue: string | null;
   ket_qua_sua_chua: string | null;
@@ -316,6 +318,8 @@ export default function RepairRequestsPage() {
             nguoi_yeu_cau,
             ngay_duyet,
             ngay_hoan_thanh,
+            nguoi_duyet,
+            nguoi_xac_nhan,
             don_vi_thuc_hien,
             ten_don_vi_thue,
             ket_qua_sua_chua,
@@ -615,6 +619,7 @@ export default function RepairRequestsPage() {
       .update({
         trang_thai: 'Đã duyệt',
         ngay_duyet: new Date().toISOString(),
+        nguoi_duyet: user?.full_name || user?.username || '',
         don_vi_thuc_hien: approvalRepairUnit,
         ten_don_vi_thue: approvalRepairUnit === 'thue_ngoai' ? approvalExternalCompanyName.trim() : null
       })
@@ -693,6 +698,7 @@ export default function RepairRequestsPage() {
       .update({
         trang_thai: completionType,
         ngay_hoan_thanh: new Date().toISOString(),
+        nguoi_xac_nhan: user?.full_name || user?.username || '',
         ket_qua_sua_chua: completionType === 'Hoàn thành' ? completionResult.trim() : null,
         ly_do_khong_hoan_thanh: completionType === 'Không HT' ? nonCompletionReason.trim() : null,
       })
@@ -841,7 +847,7 @@ export default function RepairRequestsPage() {
               .title-main { font-size: 20px; }
               .title-sub { font-size: 16px; }
               .signature-area { display: flex; flex-direction: column; align-items: center; }
-              .signature-space { height: 60px; }
+              .signature-space { height: 65px; }
               .signature-name-input { border: none; background-color: transparent; text-align: center; font-weight: 700; width: 200px; }
               .signature-name-input:focus { outline: none; }
               .page-break { page-break-before: always; }
@@ -867,7 +873,7 @@ export default function RepairRequestsPage() {
                       </div>
                       <div class="flex-grow">
                           <h2 class="title-sub uppercase font-bold">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
-                          <h1 class="title-main uppercase mt-4 font-bold">ĐỀ NGHỊ SỬA CHỮA THIẾT BỊ</h1>
+                          <h1 class="title-main uppercase mt-4 font-bold">PHIẾU ĐỀ NGHỊ SỬA CHỮA THIẾT BỊ</h1>
                       </div>
                       <div class="w-16"></div> <!-- Spacer -->
                   </div>
@@ -877,7 +883,7 @@ export default function RepairRequestsPage() {
                   </div>
               </header>
               <section>
-                  <h3 class="font-bold">I. THÔNG TIN THIẾT BỊ</h3>
+                  <h3 class="font-bold title-main">I. THÔNG TIN THIẾT BỊ</h3>
                   <div class="space-y-4 mt-3">
                       <div>
                           <label for="device-name" class="whitespace-nowrap">Tên thiết bị:</label>
@@ -931,7 +937,7 @@ export default function RepairRequestsPage() {
                   </div>
               </div>
               <section class="mt-6 border-t-2 border-dashed border-gray-400 pt-6">
-                  <h3 class="font-bold">II. BỘ PHẬN SỬA CHỮA</h3>
+                  <h3 class="font-bold title-main">II. BỘ PHẬN SỬA CHỮA</h3>
                   <div class="mt-4 flex items-center space-x-10">
                       <label class="flex items-center">
                           <input type="checkbox" class="h-4 w-4">
@@ -977,7 +983,6 @@ export default function RepairRequestsPage() {
                           </div>
                           <div class="flex-grow">
                               <h2 class="title-sub uppercase font-bold">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
-                              <h1 class="title-main uppercase mt-4 font-bold">KẾT QUẢ SỬA CHỮA THIẾT BỊ</h1>
                           </div>
                           <div class="w-16"></div> <!-- Spacer -->
                       </div>
@@ -1134,11 +1139,17 @@ export default function RepairRequestsPage() {
             {request.trang_thai === 'Đã duyệt' && request.ngay_duyet && (
               <div className="text-xs text-muted-foreground">
                 {format(parseISO(request.ngay_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                {request.nguoi_duyet && (
+                  <div className="text-blue-600 font-medium">Duyệt: {request.nguoi_duyet}</div>
+                )}
               </div>
             )}
             {(request.trang_thai === 'Hoàn thành' || request.trang_thai === 'Không HT') && request.ngay_hoan_thanh && (
               <div className="text-xs text-muted-foreground">
                 {format(parseISO(request.ngay_hoan_thanh), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                {request.nguoi_xac_nhan && (
+                  <div className="text-green-600 font-medium">Xác nhận: {request.nguoi_xac_nhan}</div>
+                )}
               </div>
             )}
           </div>
@@ -1338,6 +1349,17 @@ export default function RepairRequestsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {requestToApprove.nguoi_duyet && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-sm font-medium text-blue-800">Đã được duyệt bởi:</div>
+                  <div className="text-sm text-blue-600">{requestToApprove.nguoi_duyet}</div>
+                  {requestToApprove.ngay_duyet && (
+                    <div className="text-xs text-blue-500">
+                      {format(parseISO(requestToApprove.ngay_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <Label htmlFor="approval-repair-unit">Đơn vị thực hiện</Label>
                 <Select value={approvalRepairUnit} onValueChange={(value: 'noi_bo' | 'thue_ngoai') => setApprovalRepairUnit(value)}>
@@ -1391,6 +1413,17 @@ export default function RepairRequestsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {requestToComplete.nguoi_xac_nhan && (
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-sm font-medium text-green-800">Đã được xác nhận bởi:</div>
+                  <div className="text-sm text-green-600">{requestToComplete.nguoi_xac_nhan}</div>
+                  {requestToComplete.ngay_hoan_thanh && (
+                    <div className="text-xs text-green-500">
+                      {format(parseISO(requestToComplete.ngay_hoan_thanh), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                    </div>
+                  )}
+                </div>
+              )}
               {completionType === 'Hoàn thành' ? (
                 <div>
                   <Label htmlFor="completion-result">Kết quả sửa chữa</Label>
