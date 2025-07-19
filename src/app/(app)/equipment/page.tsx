@@ -347,6 +347,24 @@ export default function EquipmentPage() {
     pageSize: number;
   } | null>(null);
 
+  // Medium screen detection hook
+  const [isMediumScreen, setIsMediumScreen] = React.useState(false);
+
+  // Check for medium screen size (13-22 inch laptops, roughly 1024px - 1680px)
+  React.useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      // Medium screen detection: width between 1024-1680px and height between 600-1050px
+      const isMedium = (width >= 1024 && width <= 1680) && (height >= 600 && height <= 1050);
+      setIsMediumScreen(isMedium);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false,
     ma_thiet_bi: true,           // Mã thiết bị ✅
@@ -378,6 +396,26 @@ export default function EquipmentPage() {
     ngay_kd_tiep_theo: false,
     phan_loai_theo_nd98: true,   // Phân loại theo NĐ98 ✅
   });
+
+  // Auto-hide columns on medium screens
+  React.useEffect(() => {
+    if (isMediumScreen) {
+      setColumnVisibility(prev => ({
+        ...prev,
+        model: false,                // Hide Model on medium screens
+        serial: false,               // Hide Serial on medium screens
+        phan_loai_theo_nd98: false,  // Hide Phân loại theo NĐ98 on medium screens
+      }));
+    } else {
+      // Restore default visibility when not on medium screen
+      setColumnVisibility(prev => ({
+        ...prev,
+        model: true,                 // Show Model on other screens
+        serial: true,                // Show Serial on other screens
+        phan_loai_theo_nd98: true,   // Show Phân loại theo NĐ98 on other screens
+      }));
+    }
+  }, [isMediumScreen]);
 
   const handleDownloadTemplate = async () => {
     try {
@@ -1256,8 +1294,8 @@ export default function EquipmentPage() {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow 
-                key={row.id} 
+              <TableRow
+                key={row.id}
                 data-state={row.getIsSelected() && "selected"}
                 data-equipment-id={row.original.id}
               >

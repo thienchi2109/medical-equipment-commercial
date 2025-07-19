@@ -198,6 +198,37 @@ function DataTableFacetedFilter<TData, TValue>({
 
 const requestStatuses = ['Chờ xử lý', 'Đã duyệt', 'Hoàn thành', 'Không HT'];
 
+// Function to calculate days remaining and status
+const calculateDaysRemaining = (desiredDate: string | null) => {
+  if (!desiredDate) return null;
+
+  const today = new Date();
+  const targetDate = new Date(desiredDate);
+  const diffTime = targetDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let status: 'success' | 'warning' | 'danger';
+  let color: string;
+
+  if (diffDays > 7) {
+    status = 'success';
+    color = 'bg-green-500';
+  } else if (diffDays > 0) {
+    status = 'warning';
+    color = 'bg-orange-500';
+  } else {
+    status = 'danger';
+    color = 'bg-red-500';
+  }
+
+  return {
+    days: diffDays,
+    status,
+    color,
+    text: diffDays > 0 ? `Còn ${diffDays} ngày` : diffDays === 0 ? 'Hôm nay' : `Quá hạn ${Math.abs(diffDays)} ngày`
+  };
+};
+
 export default function RepairRequestsPage() {
   const { toast } = useToast()
   const { user } = useAuth()
@@ -1163,12 +1194,44 @@ export default function RepairRequestsPage() {
       ),
       cell: ({ row }) => {
         const ngayMongMuon = row.getValue("ngay_mong_muon_hoan_thanh") as string | null;
-        return (
-          <div className="text-sm">
-            {ngayMongMuon ? (
-              format(parseISO(ngayMongMuon), 'dd/MM/yyyy', { locale: vi })
-            ) : (
+        const request = row.original;
+
+        if (!ngayMongMuon) {
+          return (
+            <div className="text-sm">
               <span className="text-muted-foreground italic">Không có</span>
+            </div>
+          );
+        }
+
+        // Chỉ hiển thị progress bar cho yêu cầu chưa hoàn thành
+        const isCompleted = request.trang_thai === 'Hoàn thành' || request.trang_thai === 'Không HT';
+        const daysInfo = !isCompleted ? calculateDaysRemaining(ngayMongMuon) : null;
+
+        return (
+          <div className="space-y-1">
+            <div className="text-sm font-medium">
+              {format(parseISO(ngayMongMuon), 'dd/MM/yyyy', { locale: vi })}
+            </div>
+            {daysInfo && (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${daysInfo.color} transition-all duration-300`}
+                    style={{
+                      width: daysInfo.days > 0
+                        ? `${Math.min(100, Math.max(10, (daysInfo.days / 14) * 100))}%`
+                        : '100%'
+                    }}
+                  />
+                </div>
+                <span className={`text-xs font-medium ${
+                  daysInfo.status === 'success' ? 'text-green-600' :
+                  daysInfo.status === 'warning' ? 'text-orange-600' : 'text-red-600'
+                }`}>
+                  {daysInfo.text}
+                </span>
+              </div>
             )}
           </div>
         );
@@ -1192,7 +1255,7 @@ export default function RepairRequestsPage() {
               <div className="text-xs text-muted-foreground">
                 {format(parseISO(request.ngay_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}
                 {request.nguoi_duyet && (
-                  <div className="text-blue-600 font-medium">Duyệt: {request.nguoi_duyet}</div>
+                  <div className="text-blue-600 font-medium">Duyệt bởi: {request.nguoi_duyet}</div>
                 )}
               </div>
             )}
@@ -1200,7 +1263,7 @@ export default function RepairRequestsPage() {
               <div className="text-xs text-muted-foreground">
                 {format(parseISO(request.ngay_hoan_thanh), 'dd/MM/yyyy HH:mm', { locale: vi })}
                 {request.nguoi_xac_nhan && (
-                  <div className="text-green-600 font-medium">Xác nhận: {request.nguoi_xac_nhan}</div>
+                  <div className="text-green-600 font-medium">Xác nhận bởi: {request.nguoi_xac_nhan}</div>
                 )}
               </div>
             )}
@@ -1295,6 +1358,12 @@ export default function RepairRequestsPage() {
                       selected={editDesiredDate}
                       onSelect={setEditDesiredDate}
                       initialFocus
+                      disabled={(date) => {
+                        const requestDate = editingRequest?.ngay_yeu_cau
+                          ? new Date(editingRequest.ngay_yeu_cau)
+                          : new Date();
+                        return date < new Date(requestDate.setHours(0, 0, 0, 0));
+                      }}
                     />
                   </PopoverContent>
                 </Popover>
@@ -1812,6 +1881,7 @@ export default function RepairRequestsPage() {
                         selected={desiredDate}
                         onSelect={setDesiredDate}
                         initialFocus
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       />
                     </PopoverContent>
                   </Popover>
@@ -2012,11 +2082,38 @@ export default function RepairRequestsPage() {
 
                               {/* Ngày mong muốn hoàn thành */}
                               {request.ngay_mong_muon_hoan_thanh && (
-                                <div className="mobile-repair-card-field">
-                                  <span className="mobile-repair-card-label">Ngày mong muốn HT</span>
-                                  <span className="mobile-repair-card-value">
-                                    {format(parseISO(request.ngay_mong_muon_hoan_thanh), 'dd/MM/yyyy', { locale: vi })}
-                                  </span>
+                                <div className="space-y-2">
+                                  <div className="mobile-repair-card-field">
+                                    <span className="mobile-repair-card-label">Ngày mong muốn HT</span>
+                                    <span className="mobile-repair-card-value">
+                                      {format(parseISO(request.ngay_mong_muon_hoan_thanh), 'dd/MM/yyyy', { locale: vi })}
+                                    </span>
+                                  </div>
+                                  {(() => {
+                                    // Chỉ hiển thị progress bar cho yêu cầu chưa hoàn thành
+                                    const isCompleted = request.trang_thai === 'Hoàn thành' || request.trang_thai === 'Không HT';
+                                    const daysInfo = !isCompleted ? calculateDaysRemaining(request.ngay_mong_muon_hoan_thanh) : null;
+                                    return daysInfo && (
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                          <div
+                                            className={`h-2 rounded-full ${daysInfo.color} transition-all duration-300`}
+                                            style={{
+                                              width: daysInfo.days > 0
+                                                ? `${Math.min(100, Math.max(10, (daysInfo.days / 14) * 100))}%`
+                                                : '100%'
+                                            }}
+                                          />
+                                        </div>
+                                        <span className={`text-xs font-medium ${
+                                          daysInfo.status === 'success' ? 'text-green-600' :
+                                          daysInfo.status === 'warning' ? 'text-orange-600' : 'text-red-600'
+                                        }`}>
+                                          {daysInfo.text}
+                                        </span>
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                               )}
 
