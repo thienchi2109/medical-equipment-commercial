@@ -197,10 +197,6 @@ function DataTableFacetedFilter<TData, TValue>({
 }
 
 const requestStatuses = ['Chờ xử lý', 'Đã duyệt', 'Hoàn thành', 'Không HT'];
-const repairUnits = [
-  { label: 'Nội bộ', value: 'noi_bo' },
-  { label: 'Thuê ngoài', value: 'thue_ngoai' }
-];
 
 export default function RepairRequestsPage() {
   const { toast } = useToast()
@@ -229,6 +225,9 @@ export default function RepairRequestsPage() {
   const [isEditSubmitting, setIsEditSubmitting] = React.useState(false);
   const [requestToDelete, setRequestToDelete] = React.useState<RepairRequestWithEquipment | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+
+  // Detail dialog state
+  const [requestToView, setRequestToView] = React.useState<RepairRequestWithEquipment | null>(null);
 
   // Edit form state
   const [editIssueDescription, setEditIssueDescription] = React.useState("");
@@ -883,7 +882,7 @@ export default function RepairRequestsPage() {
                   </div>
               </header>
               <section>
-                  <h3 class="font-bold title-main">I. THÔNG TIN THIẾT BỊ</h3>
+                  <h3 class="font-bold text-base">I. THÔNG TIN THIẾT BỊ</h3>
                   <div class="space-y-4 mt-3">
                       <div>
                           <label for="device-name" class="whitespace-nowrap">Tên thiết bị:</label>
@@ -937,7 +936,7 @@ export default function RepairRequestsPage() {
                   </div>
               </div>
               <section class="mt-6 border-t-2 border-dashed border-gray-400 pt-6">
-                  <h3 class="font-bold title-main">II. BỘ PHẬN SỬA CHỮA</h3>
+                  <h3 class="font-bold text-base">II. BỘ PHẬN SỬA CHỮA</h3>
                   <div class="mt-4 flex items-center space-x-10">
                       <label class="flex items-center">
                           <input type="checkbox" class="h-4 w-4">
@@ -990,7 +989,7 @@ export default function RepairRequestsPage() {
 
                   <!-- Main Content -->
                   <main class="mt-8">
-                      <h3 class="title-main font-bold">III. KẾT QUẢ, TÌNH TRẠNG THIẾT BỊ SAU KHI XỬ LÝ</h3>
+                      <h3 class="text-base font-bold">III. KẾT QUẢ, TÌNH TRẠNG THIẾT BỊ SAU KHI XỬ LÝ</h3>
                       <div class="mt-4">
                           <textarea class="form-textarea" rows="5" placeholder="Nhập kết quả và tình trạng thiết bị...">${request.ket_qua_sua_chua || request.ly_do_khong_hoan_thanh || ''}</textarea>
                       </div>
@@ -1007,7 +1006,7 @@ export default function RepairRequestsPage() {
                       </div>
                        <div class="flex justify-around">
                           <div class="signature-area w-1/2">
-                              <p class="font-bold">Tổ TTBYT</p>
+                              <p class="font-bold">Tổ Quản lý TBYT</p>
                               <p class="italic">(Ký, ghi rõ họ, tên)</p>
                               <div class="signature-space"></div>
                               <input type="text" class="signature-name-input" placeholder="(Họ và tên)">
@@ -1099,6 +1098,7 @@ export default function RepairRequestsPage() {
   };
 
   const columns: ColumnDef<RepairRequestWithEquipment>[] = [
+    // 1. Thiết bị (với mô tả sự cố)
     {
       accessorFn: row => `${row.thiet_bi?.ten_thiet_bi} ${row.mo_ta_su_co}`,
       id: 'thiet_bi_va_mo_ta',
@@ -1123,6 +1123,58 @@ export default function RepairRequestsPage() {
         return nameA.localeCompare(nameB);
       }
     },
+    // 2. Người yêu cầu
+    {
+      accessorKey: "nguoi_yeu_cau",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Người yêu cầu
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const nguoiYeuCau = row.getValue("nguoi_yeu_cau") as string | null;
+        return (
+          <div className="text-sm">
+            {nguoiYeuCau || <span className="text-muted-foreground italic">N/A</span>}
+          </div>
+        );
+      },
+    },
+    // 3. Ngày yêu cầu
+    {
+      accessorKey: "ngay_yeu_cau",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Ngày yêu cầu
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div className="text-sm">{format(parseISO(row.getValue("ngay_yeu_cau")), 'dd/MM/yyyy HH:mm', { locale: vi })}</div>,
+    },
+    // 4. Ngày mong muốn hoàn thành
+    {
+      accessorKey: "ngay_mong_muon_hoan_thanh",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Ngày mong muốn HT
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const ngayMongMuon = row.getValue("ngay_mong_muon_hoan_thanh") as string | null;
+        return (
+          <div className="text-sm">
+            {ngayMongMuon ? (
+              format(parseISO(ngayMongMuon), 'dd/MM/yyyy', { locale: vi })
+            ) : (
+              <span className="text-muted-foreground italic">Không có</span>
+            )}
+          </div>
+        );
+      },
+    },
+    // 5. Trạng thái
     {
       accessorKey: "trang_thai",
       header: ({ column }) => (
@@ -1158,41 +1210,12 @@ export default function RepairRequestsPage() {
       filterFn: (row, id, value) => value.includes(row.getValue(id)),
     },
     {
-      accessorKey: "don_vi_thuc_hien",
-      header: "Đơn vị thực hiện",
-      cell: ({ row }) => {
-        const request = row.original
-        if (!request.don_vi_thuc_hien) {
-          return <Badge variant="outline" className="self-start">Chưa xác định</Badge>;
-        }
-        return (
-          <div className="flex flex-col gap-1">
-            <Badge variant={request.don_vi_thuc_hien === 'noi_bo' ? 'default' : 'secondary'} className="self-start">
-              {request.don_vi_thuc_hien === 'noi_bo' ? 'Nội bộ' : 'Thuê ngoài'}
-            </Badge>
-            {request.don_vi_thuc_hien === 'thue_ngoai' && request.ten_don_vi_thue && (
-              <div className="text-xs text-muted-foreground max-w-xs truncate">
-                {request.ten_don_vi_thue}
-              </div>
-            )}
-          </div>
-        )
-      },
-      filterFn: (row, id, value) => value.includes(row.getValue(id)),
-    },
-    {
-      accessorKey: "ngay_yeu_cau",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Ngày yêu cầu
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{format(parseISO(row.getValue("ngay_yeu_cau")), 'dd/MM/yyyy HH:mm', { locale: vi })}</div>,
-    },
-    {
       id: "actions",
-      cell: ({ row }) => renderActions(row.original),
+      cell: ({ row }) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          {renderActions(row.original)}
+        </div>
+      ),
     },
   ];
 
@@ -1463,6 +1486,203 @@ export default function RepairRequestsPage() {
         </Dialog>
       )}
 
+      {/* Request Detail Dialog */}
+      {requestToView && (
+        <Dialog open={!!requestToView} onOpenChange={(open) => !open && setRequestToView(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle className="text-lg font-semibold">
+                Chi tiết yêu cầu sửa chữa
+              </DialogTitle>
+              <DialogDescription>
+                Thông tin chi tiết về yêu cầu sửa chữa thiết bị
+              </DialogDescription>
+            </DialogHeader>
+
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-6 py-4">
+                {/* Equipment Information */}
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold text-foreground border-b pb-2">
+                    Thông tin thiết bị
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Tên thiết bị</Label>
+                      <div className="text-sm font-medium">{requestToView.thiet_bi?.ten_thiet_bi || 'N/A'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Mã thiết bị</Label>
+                      <div className="text-sm">{requestToView.thiet_bi?.ma_thiet_bi || 'N/A'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Model</Label>
+                      <div className="text-sm">{requestToView.thiet_bi?.model || 'N/A'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Serial</Label>
+                      <div className="text-sm">{requestToView.thiet_bi?.serial || 'N/A'}</div>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Khoa/Phòng quản lý</Label>
+                      <div className="text-sm">{requestToView.thiet_bi?.khoa_phong_quan_ly || 'N/A'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Request Information */}
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold text-foreground border-b pb-2">
+                    Thông tin yêu cầu
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Trạng thái</Label>
+                      <Badge variant={getStatusVariant(requestToView.trang_thai)} className="w-fit">
+                        {requestToView.trang_thai}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Ngày yêu cầu</Label>
+                      <div className="text-sm">
+                        {format(parseISO(requestToView.ngay_yeu_cau), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Người yêu cầu</Label>
+                      <div className="text-sm">{requestToView.nguoi_yeu_cau || 'N/A'}</div>
+                    </div>
+                    {requestToView.ngay_mong_muon_hoan_thanh && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Ngày mong muốn hoàn thành</Label>
+                        <div className="text-sm">
+                          {format(parseISO(requestToView.ngay_mong_muon_hoan_thanh), 'dd/MM/yyyy', { locale: vi })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-muted-foreground">Mô tả sự cố</Label>
+                    <div className="text-sm bg-muted/50 p-3 rounded-md whitespace-pre-wrap">
+                      {requestToView.mo_ta_su_co}
+                    </div>
+                  </div>
+
+                  {requestToView.hang_muc_sua_chua && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Hạng mục sửa chữa</Label>
+                      <div className="text-sm bg-muted/50 p-3 rounded-md whitespace-pre-wrap">
+                        {requestToView.hang_muc_sua_chua}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Execution Information */}
+                {(requestToView.don_vi_thuc_hien || requestToView.ten_don_vi_thue) && (
+                  <div className="space-y-3">
+                    <h3 className="text-base font-semibold text-foreground border-b pb-2">
+                      Thông tin thực hiện
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {requestToView.don_vi_thuc_hien && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Đơn vị thực hiện</Label>
+                          <Badge variant="outline" className="w-fit">
+                            {requestToView.don_vi_thuc_hien === 'noi_bo' ? 'Nội bộ' : 'Thuê ngoài'}
+                          </Badge>
+                        </div>
+                      )}
+                      {requestToView.ten_don_vi_thue && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Tên đơn vị thuê</Label>
+                          <div className="text-sm">{requestToView.ten_don_vi_thue}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Approval Information */}
+                {(requestToView.ngay_duyet || requestToView.nguoi_duyet) && (
+                  <div className="space-y-3">
+                    <h3 className="text-base font-semibold text-foreground border-b pb-2">
+                      Thông tin phê duyệt
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {requestToView.nguoi_duyet && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Người duyệt</Label>
+                          <div className="text-sm">{requestToView.nguoi_duyet}</div>
+                        </div>
+                      )}
+                      {requestToView.ngay_duyet && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Ngày duyệt</Label>
+                          <div className="text-sm">
+                            {format(parseISO(requestToView.ngay_duyet), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Completion Information */}
+                {(requestToView.ngay_hoan_thanh || requestToView.ket_qua_sua_chua || requestToView.ly_do_khong_hoan_thanh || requestToView.nguoi_xac_nhan) && (
+                  <div className="space-y-3">
+                    <h3 className="text-base font-semibold text-foreground border-b pb-2">
+                      Thông tin hoàn thành
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {requestToView.nguoi_xac_nhan && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Người xác nhận</Label>
+                          <div className="text-sm">{requestToView.nguoi_xac_nhan}</div>
+                        </div>
+                      )}
+                      {requestToView.ngay_hoan_thanh && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Ngày hoàn thành</Label>
+                          <div className="text-sm">
+                            {format(parseISO(requestToView.ngay_hoan_thanh), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {requestToView.ket_qua_sua_chua && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Kết quả sửa chữa</Label>
+                        <div className="text-sm bg-green-50 border border-green-200 p-3 rounded-md whitespace-pre-wrap">
+                          {requestToView.ket_qua_sua_chua}
+                        </div>
+                      </div>
+                    )}
+
+                    {requestToView.ly_do_khong_hoan_thanh && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">Lý do không hoàn thành</Label>
+                        <div className="text-sm bg-red-50 border border-red-200 p-3 rounded-md whitespace-pre-wrap">
+                          {requestToView.ly_do_khong_hoan_thanh}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="flex-shrink-0">
+              <Button variant="outline" onClick={() => setRequestToView(null)}>
+                Đóng
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Repair Request Alert */}
       <RepairRequestAlert requests={requests} />
 
@@ -1706,11 +1926,6 @@ export default function RepairRequestsPage() {
                           title="Trạng thái"
                           options={requestStatuses.map(s => ({ label: s, value: s }))}
                         />
-                        <DataTableFacetedFilter
-                          column={table.getColumn("don_vi_thuc_hien")}
-                          title="Đơn vị thực hiện"
-                          options={repairUnits}
-                        />
                       </>
                     )}
 
@@ -1718,23 +1933,16 @@ export default function RepairRequestsPage() {
                     {isMobile && (
                       <MobileFiltersDropdown
                         activeFiltersCount={
-                          ((table.getColumn("trang_thai")?.getFilterValue() as string[])?.length || 0) +
-                          ((table.getColumn("don_vi_thuc_hien")?.getFilterValue() as string[])?.length || 0)
+                          ((table.getColumn("trang_thai")?.getFilterValue() as string[])?.length || 0)
                         }
                         onClearFilters={() => {
                           table.getColumn("trang_thai")?.setFilterValue([])
-                          table.getColumn("don_vi_thuc_hien")?.setFilterValue([])
                         }}
                       >
                         <DataTableFacetedFilter
                           column={table.getColumn("trang_thai")}
                           title="Trạng thái"
                           options={requestStatuses.map(s => ({ label: s, value: s }))}
-                        />
-                        <DataTableFacetedFilter
-                          column={table.getColumn("don_vi_thuc_hien")}
-                          title="Đơn vị thực hiện"
-                          options={repairUnits}
                         />
                       </MobileFiltersDropdown>
                     )}
@@ -1767,7 +1975,11 @@ export default function RepairRequestsPage() {
                       table.getRowModel().rows.map((row) => {
                         const request = row.original;
                         return (
-                          <Card key={request.id} className="mobile-repair-card">
+                          <Card
+                            key={request.id}
+                            className="mobile-repair-card cursor-pointer hover:bg-muted/50"
+                            onClick={() => setRequestToView(request)}
+                          >
                             <CardHeader className="mobile-repair-card-header flex flex-row items-start justify-between">
                               <div className="flex-1 min-w-0 pr-2">
                                 <CardTitle className="mobile-repair-card-title truncate line-clamp-1">
@@ -1777,37 +1989,56 @@ export default function RepairRequestsPage() {
                                   {request.thiet_bi?.ma_thiet_bi || 'N/A'}
                                 </CardDescription>
                               </div>
-                              <div className="flex-shrink-0">
+                              <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                 {renderActions(request)}
                               </div>
                             </CardHeader>
                             <CardContent className="mobile-repair-card-content">
-                              <div className="mobile-repair-card-field">
-                                <span className="mobile-repair-card-label">Trạng thái</span>
-                                <Badge variant={getStatusVariant(request.trang_thai)} className="text-xs">
-                                  {request.trang_thai}
-                                </Badge>
-                              </div>
+                              {/* Người yêu cầu */}
+                              {request.nguoi_yeu_cau && (
+                                <div className="mobile-repair-card-field">
+                                  <span className="mobile-repair-card-label">Người yêu cầu</span>
+                                  <span className="mobile-repair-card-value">{request.nguoi_yeu_cau}</span>
+                                </div>
+                              )}
+
+                              {/* Ngày yêu cầu */}
                               <div className="mobile-repair-card-field">
                                 <span className="mobile-repair-card-label">Ngày yêu cầu</span>
                                 <span className="mobile-repair-card-value">
                                   {format(parseISO(request.ngay_yeu_cau), 'dd/MM/yyyy', { locale: vi })}
                                 </span>
                               </div>
+
+                              {/* Ngày mong muốn hoàn thành */}
+                              {request.ngay_mong_muon_hoan_thanh && (
+                                <div className="mobile-repair-card-field">
+                                  <span className="mobile-repair-card-label">Ngày mong muốn HT</span>
+                                  <span className="mobile-repair-card-value">
+                                    {format(parseISO(request.ngay_mong_muon_hoan_thanh), 'dd/MM/yyyy', { locale: vi })}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Trạng thái */}
+                              <div className="mobile-repair-card-field">
+                                <span className="mobile-repair-card-label">Trạng thái</span>
+                                <Badge variant={getStatusVariant(request.trang_thai)} className="text-xs">
+                                  {request.trang_thai}
+                                </Badge>
+                              </div>
+
+                              {/* Mô tả sự cố */}
                               <div className="space-y-1">
                                 <span className="mobile-repair-card-label">Mô tả sự cố:</span>
                                 <p className="mobile-repair-card-value text-left text-xs leading-relaxed line-clamp-2">{request.mo_ta_su_co}</p>
                               </div>
+
+                              {/* Hạng mục sửa chữa (optional) */}
                               {request.hang_muc_sua_chua && (
                                 <div className="space-y-1">
                                   <span className="mobile-repair-card-label">Hạng mục sửa chữa:</span>
                                   <p className="mobile-repair-card-value text-left text-xs leading-relaxed line-clamp-2">{request.hang_muc_sua_chua}</p>
-                                </div>
-                              )}
-                              {request.nguoi_yeu_cau && (
-                                <div className="mobile-repair-card-field">
-                                  <span className="mobile-repair-card-label">Người yêu cầu</span>
-                                  <span className="mobile-repair-card-value">{request.nguoi_yeu_cau}</span>
                                 </div>
                               )}
                             </CardContent>
@@ -1855,6 +2086,8 @@ export default function RepairRequestsPage() {
                             <TableRow
                               key={row.id}
                               data-state={row.getIsSelected() && "selected"}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => setRequestToView(row.original)}
                             >
                               {row.getVisibleCells().map((cell) => (
                                 <TableCell key={cell.id}>

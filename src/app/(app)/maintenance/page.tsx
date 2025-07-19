@@ -616,6 +616,18 @@ export default function MaintenancePage() {
       cell: ({ row }) => <div className="font-medium">{row.getValue("ten_ke_hoach")}</div>,
     },
     {
+      accessorKey: "nguoi_lap_ke_hoach",
+      header: "Người lập",
+      cell: ({ row }) => {
+        const nguoiLap = row.getValue("nguoi_lap_ke_hoach") as string | null;
+        return nguoiLap ? (
+          <div className="text-sm">{nguoiLap}</div>
+        ) : (
+          <span className="text-muted-foreground italic text-xs">Chưa có</span>
+        );
+      },
+    },
+    {
       accessorKey: "nam",
       header: ({ column }) => (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -726,7 +738,7 @@ export default function MaintenancePage() {
   ], [user, handleSelectPlan, setEditingPlan, setPlanToDelete, setPlanToApprove]);
 
   const planTable = useReactTable({
-    data: plans,
+    data: plans as MaintenancePlan[],
     columns: planColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -1202,6 +1214,23 @@ export default function MaintenancePage() {
             outline: none;
             text-align: center;
         }
+        /* Footer styling - normal display */
+        .print-footer {
+            padding: 8px 12px;
+            font-size: 11px;
+            margin-top: 20px;
+        }
+
+        /* Special styling for page number inputs */
+        .print-footer .form-input-line {
+            border-bottom: 1px solid #000;
+            min-width: 20px;
+            font-weight: bold;
+        }
+        .print-footer .form-input-line:focus {
+            background-color: #f0f9ff;
+            border-bottom: 2px solid #3b82f6;
+        }
         h1, h2, .font-bold {
             font-weight: 700;
         }
@@ -1303,12 +1332,34 @@ export default function MaintenancePage() {
             height: 60px; /* Không gian để ký tay */
         }
 
+        /* Page numbering notice styles */
+        .page-numbering-notice {
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Animation for page numbering notice */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+            }
+        }
+
         /* CSS for printing */
         @media print {
             body {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 background-color: #fff !important;
+            }
+            /* Hide page numbering notice when printing */
+            .page-numbering-notice {
+                display: none !important;
             }
             .a4-landscape-page {
                 width: 100%;
@@ -1362,16 +1413,26 @@ export default function MaintenancePage() {
                 min-height: 40px !important;
                 page-break-inside: avoid;
             }
-            /* Cố định footer ở cuối mỗi trang in */
+            /* Footer styling for print - MS Word style */
             .print-footer {
                 position: fixed;
-                bottom: 1cm;
-                left: 1cm;
-                right: 1cm;
-                width: calc(100% - 2cm);
+                bottom: 0.5cm;
+                left: 0;
+                right: 0;
+                width: 100%;
+                background-color: #f8f9fa !important;
+                color: #6c757d !important;
+                border-top: 1px solid #dee2e6 !important;
+                padding: 8px 1cm !important;
+                font-size: 10px !important;
+                z-index: 1000;
+            }
+            .print-footer .form-input-line {
+                color: #6c757d !important;
+                border-bottom-color: #6c757d !important;
             }
              .content-body {
-                padding-bottom: 30px; /* Khoảng đệm cho footer */
+                padding-bottom: 50px; /* Khoảng đệm cho footer */
             }
         }
     </style>
@@ -1412,6 +1473,37 @@ export default function MaintenancePage() {
                     setTimeout(() => autoResizeTextarea(this), 10);
                 });
             });
+
+            // Add functionality for page number inputs
+            const pageInputs = document.querySelectorAll('.print-footer .form-input-line');
+            pageInputs.forEach(function(input) {
+                // Auto-select content when focused
+                input.addEventListener('focus', function() {
+                    this.select();
+                    this.style.backgroundColor = '#ffffff';
+                    this.style.color = '#000';
+                });
+
+                // Reset style when blur
+                input.addEventListener('blur', function() {
+                    this.style.backgroundColor = 'transparent';
+                    this.style.color = '#6c757d';
+                });
+
+                // Only allow numbers
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    if (this.value === '') this.value = '1';
+                });
+            });
+
+            // Show a subtle highlight on the page numbering notice for 3 seconds
+            const notice = document.querySelector('.page-numbering-notice');
+            if (notice) {
+                setTimeout(() => {
+                    notice.style.animation = 'pulse 2s ease-in-out 3';
+                }, 500);
+            }
         });
     </script>
 </head>
@@ -1427,7 +1519,7 @@ export default function MaintenancePage() {
                     </div>
                     <div class="text-center w-1/2">
                          <h2 class="title-sub uppercase font-bold">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
-                         <div class="flex items-baseline justify-center font-bold">
+                         <div class="flex items-baseline justify-center font-bold text-base">
                             <label for="department-name">KHOA/PHÒNG:</label>
                             <input type="text" id="department-name" class="form-input-line flex-grow ml-2" value="${formatValue(selectedPlan.khoa_phong)}">
                          </div>
@@ -1450,26 +1542,26 @@ export default function MaintenancePage() {
                             <th rowspan="2" class="w-[3%]">TT</th>
                             <th rowspan="2" class="w-[7%]">Mã TB</th>
                             <th rowspan="2" class="w-[12%]">Tên TB</th>
-                            <th rowspan="2" class="w-[10%]">Khoa/Phòng sử dụng</th>
+                            <th rowspan="2" class="w-[10%]">Khoa/Phòng</th>
                             <th colspan="2">Đơn vị thực hiện</th>
                             <th colspan="12">Thời gian dự kiến ${selectedPlan.loai_cong_viec.toLowerCase()} (tháng)</th>
-                            <th rowspan="2" class="w-[15%]">Điểm BT/HC/KĐ</th>
+                            <th rowspan="2" class="w-[16%]">Điểm BT/HC/KĐ</th>
                         </tr>
                         <tr>
-                            <th class="w-[4%]">Nội bộ</th>
-                            <th class="w-[4%]">Thuê ngoài</th>
-                            <th class="w-[2%]">1</th>
-                            <th class="w-[2%]">2</th>
-                            <th class="w-[2%]">3</th>
-                            <th class="w-[2%]">4</th>
-                            <th class="w-[2%]">5</th>
-                            <th class="w-[2%]">6</th>
-                            <th class="w-[2%]">7</th>
-                            <th class="w-[2%]">8</th>
-                            <th class="w-[2%]">9</th>
-                            <th class="w-[2%]">10</th>
-                            <th class="w-[2%]">11</th>
-                            <th class="w-[2%]">12</th>
+                            <th class="w-[7%]">Nội bộ</th>
+                            <th class="w-[7%]">Thuê ngoài</th>
+                            <th class="w-[0.75%]">1</th>
+                            <th class="w-[0.75%]">2</th>
+                            <th class="w-[0.75%]">3</th>
+                            <th class="w-[0.75%]">4</th>
+                            <th class="w-[0.75%]">5</th>
+                            <th class="w-[0.75%]">6</th>
+                            <th class="w-[0.75%]">7</th>
+                            <th class="w-[0.75%]">8</th>
+                            <th class="w-[0.75%]">9</th>
+                            <th class="w-[0.75%]">10</th>
+                            <th class="w-[0.75%]">11</th>
+                            <th class="w-[0.75%]">12</th>
                         </tr>
                     </thead>
                     <tbody id="plan-table-body">
@@ -1504,8 +1596,26 @@ export default function MaintenancePage() {
         <footer class="print-footer flex justify-between items-center text-xs">
             <span>QLTB-BM.09</span>
             <span>BH.01 (05/2024)</span>
-            <span>Trang: 1/1</span>
+            <div class="flex items-center">
+                <span>Trang: </span>
+                <input type="text" class="form-input-line w-8 mx-1 text-center" value="1" placeholder="1" title="Nhập số trang hiện tại">
+                <span>/</span>
+                <input type="text" class="form-input-line w-8 mx-1 text-center" value="1" placeholder="1" title="Nhập tổng số trang">
+            </div>
         </footer>
+
+        <!-- Page numbering notice (only visible on screen, hidden when printing) -->
+        <div class="page-numbering-notice bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mt-4 print:hidden">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <div>
+                    <p class="font-medium">Lưu ý về đánh số trang:</p>
+                    <p class="text-sm">Vui lòng cập nhật số trang hiện tại và tổng số trang trong footer trước khi in. Ví dụ: "1/3" cho trang 1 trong tổng số 3 trang.</p>
+                </div>
+            </div>
+        </div>
 
     </div>
 
