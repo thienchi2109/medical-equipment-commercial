@@ -1660,7 +1660,7 @@ export default function EquipmentPage() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="h-8 gap-1 touch-target-sm md:h-8">
-                      Cột
+                      Hiện/ẩn cột
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -1691,7 +1691,7 @@ export default function EquipmentPage() {
               <Button size="sm" variant="outline" className="h-8 gap-1 touch-target-sm md:h-8" onClick={handleDownloadTemplate}>
                 <File className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Mẫu
+                  Excel mẫu
                 </span>
               </Button>
             </div>
