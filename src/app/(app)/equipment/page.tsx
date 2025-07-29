@@ -101,6 +101,7 @@ import { EditEquipmentDialog } from "@/components/edit-equipment-dialog"
 import { MobileFiltersDropdown } from "@/components/mobile-filters-dropdown"
 import { ResponsivePaginationInfo } from "@/components/responsive-pagination-info"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import { exportArrayToExcel, exportToExcel } from "@/lib/excel-utils"
 import { UsageHistoryTab } from "@/components/usage-history-tab"
 import { ActiveUsageIndicator } from "@/components/active-usage-indicator"
@@ -347,23 +348,10 @@ export default function EquipmentPage() {
     pageSize: number;
   } | null>(null);
 
-  // Medium screen detection hook
-  const [isMediumScreen, setIsMediumScreen] = React.useState(false);
-
-  // Check for medium screen size (13-22 inch laptops, roughly 1024px - 1680px)
-  React.useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      // Medium screen detection: width between 1024-1680px and height between 600-1050px
-      const isMedium = (width >= 1024 && width <= 1680) && (height >= 600 && height <= 1050);
-      setIsMediumScreen(isMedium);
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+  // Medium screen detection using useMediaQuery hook for better performance
+  // Target tablet and small laptop screens (768px - 1800px) where column space is limited
+  // This covers most 12-15 inch laptops and tablets in landscape mode
+  const isMediumScreen = useMediaQuery("(min-width: 768px) and (max-width: 1800px)");
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     id: false,
