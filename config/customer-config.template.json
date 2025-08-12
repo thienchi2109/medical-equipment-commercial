@@ -1,0 +1,87 @@
+{
+  "customer": {
+    "name": "Bệnh viện ABC",
+    "code": "BV_ABC",
+    "domain": "bv-abc.com",
+    "contact": {
+      "email": "admin@bv-abc.com",
+      "phone": "+84 123 456 789",
+      "address": "123 Đường ABC, Quận XYZ, TP. HCM"
+    }
+  },
+  "branding": {
+    "appName": "Quản lý TBYT - BV ABC",
+    "shortName": "TBYT ABC",
+    "description": "Hệ thống quản lý thiết bị y tế Bệnh viện ABC",
+    "primaryColor": "#2563eb",
+    "secondaryColor": "#f59e0b",
+    "logo": "/assets/bv-abc-logo.png",
+    "favicon": "/assets/bv-abc-favicon.ico"
+  },
+  "supabase": {
+    "url": "https://your-project.supabase.co",
+    "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "serviceKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+  "github": {
+    "repoName": "bv-abc-medical-equipment",
+    "orgName": "your-organization",
+    "visibility": "private"
+  },
+  "deployment": {
+    "platform": "vercel",
+    "customDomain": "tbyt.bv-abc.com",
+    "environment": "production"
+  },
+  "features": {
+    "enableQRScanner": true,
+    "enableReports": true,
+    "enableTransfers": true,
+    "enableMaintenance": true,
+    "enableUserManagement": true,
+    "enableRealtime": true
+  },
+  "sampleData": {
+    "departments": [
+      "Khoa Nội",
+      "Khoa Ngoại", 
+      "Khoa Sản",
+      "Khoa Nhi",
+      "Phòng Xét nghiệm",
+      "Phòng Chẩn đoán hình ảnh"
+    ],
+    "equipmentTypes": [
+      "Thiết bị y tế",
+      "Máy xét nghiệm",
+      "Máy chẩn đoán",
+      "Thiết bị phẫu thuật"
+    ],
+    "adminUser": {
+      "username": "admin",
+      "password": "admin123",
+      "fullName": "Quản trị viên BV ABC",
+      "role": "admin"
+    }
+  },
+  "customization": {
+    "roles": {
+      "admin": "Quản trị hệ thống",
+      "to_qltb": "Tổ QLTB BV ABC",
+      "qltb_khoa": "QLTB Khoa/Phòng",
+      "user": "Nhân viên"
+    },
+    "equipmentStatuses": [
+      "Đang sử dụng",
+      "Chờ sửa chữa",
+      "Chờ bảo trì",
+      "Ngừng sử dụng",
+      "Thanh lý"
+    ],
+    "maintenanceTypes": [
+      "Bảo trì định kỳ",
+      "Bảo trì đột xuất",
+      "Hiệu chuẩn",
+      "Kiểm định"
+    ]
+  }
+}
