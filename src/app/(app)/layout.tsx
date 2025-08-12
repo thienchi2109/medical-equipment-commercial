@@ -137,7 +137,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center gap-4">
-              <Logo />
+              <Logo size="xl" priority={true} />
               <Skeleton className="h-8 w-48" />
           </div>
       </div>
@@ -155,8 +155,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex h-full max-h-screen flex-col">
             <div className="flex h-auto flex-col items-center gap-4 border-b p-4">
               <Link href="/" className="flex flex-col items-center gap-3 font-semibold text-primary">
-                <Logo />
-                {isSidebarOpen && <span className="text-center text-base font-semibold">QUẢN LÝ TBYT - CDC</span>}
+                <Logo size="lg" priority={true} />
+                {isSidebarOpen && <span className="text-center text-base font-semibold">QUẢN LÝ TBYT</span>}
               </Link>
             </div>
             <div className="flex-1 overflow-auto py-4">
@@ -206,8 +206,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     className="flex flex-col items-center gap-3 font-semibold text-primary"
                     onClick={() => setIsMobileSheetOpen(false)}
                   >
-                    <Logo />
-                    <span className="text-center heading-responsive-h3">QUẢN LÝ TBYT - CDC</span>
+                    <Logo size="lg" priority={true} />
+                    <span className="text-center heading-responsive-h3">QUẢN LÝ TBYT</span>
                   </Link>
                 </div>
                 <nav className="grid gap-2 body-responsive font-medium p-4">

@@ -9,8 +9,8 @@ import { PWAInstallPrompt, PWAStatus } from '@/components/pwa-install-prompt';
 import { ThemeColorManager } from '@/components/theme-color-manager';
 
 export const metadata: Metadata = {
-  title: 'QUẢN LÝ TBYT CDC',
-  description: 'Hệ thống quản lý trang thiết bị y tế',
+  title: 'WEBAPP QUẢN LÝ TBYT',
+  description: 'Hệ thống quản lý trang thiết bị y tế chuyên nghiệp',
   manifest: '/manifest.json', // Added manifest link
 };
 

@@ -109,145 +109,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-      // 🔐 NEW: Use enhanced dual mode authentication
-      const { data: authData, error: authError } = await supabase!.rpc('authenticate_user_dual_mode', {
-        p_username: username.trim(),
-        p_password: password
-      });
+      // 🔄 LEGACY AUTHENTICATION ONLY: Use direct database query for plaintext passwords
+      console.log("Using legacy plaintext authentication only...");
 
-      if (authError) {
-        console.error("Authentication error:", authError);
-        throw authError; // Will trigger fallback
-      }
+      const { data: userData, error: userError } = await supabase!
+        .from('nhan_vien')
+        .select('*')
+        .eq('username', username.trim())
+        .single();
 
-      if (!authData || !Array.isArray(authData) || authData.length === 0) {
-        console.error("No authentication data returned");
-        throw new Error("Invalid authentication response");
-      }
-
-      const authResult = authData[0];
-
-      // Check if authentication was successful
-      if (!authResult.is_authenticated) {
-        const message = authResult.authentication_mode === 'user_not_found' 
-          ? "Tên đăng nhập không tồn tại."
-          : authResult.authentication_mode === 'blocked_suspicious'
-          ? "Thông tin đăng nhập không hợp lệ."
-          : "Tên đăng nhập hoặc mật khẩu không đúng.";
-
+      if (userError || !userData) {
+        console.error("User lookup failed:", userError);
         toast({
           variant: "destructive",
           title: "Đăng nhập thất bại",
-          description: message,
+          description: "Tên đăng nhập không tồn tại.",
         });
         return false;
       }
 
-      // 🎉 Authentication successful
-      const userData: User = {
-        id: authResult.user_id,
-        username: authResult.username,
-        password: '', // Never store password in frontend
-        full_name: authResult.full_name || '',
-        role: authResult.role as UserRole,
-        khoa_phong: authResult.khoa_phong || '',
-        created_at: new Date().toISOString(),
-      };
+      // 🚨 SECURITY: Block login attempts with suspicious strings
+      if (password === 'hashed password' || 
+          password.includes('hash') || 
+          password.includes('crypt') || 
+          password.length > 200) {
+        console.warn('Security: Blocked login attempt with suspicious password');
+        toast({
+          variant: "destructive",
+          title: "Đăng nhập thất bại",
+          description: "Thông tin đăng nhập không hợp lệ.",
+        });
+        return false;
+      }
 
-      // Create real session token with 3-hour expiration
-      const sessionData = {
-        user_id: userData.id,
-        username: userData.username,
-        role: userData.role,
-        khoa_phong: userData.khoa_phong,
-        full_name: userData.full_name,
-        created_at: Date.now(),
-        expires_at: Date.now() + (3 * 60 * 60 * 1000) // 3 hours in milliseconds
-      };
+      // ⚠️ LEGACY: Check ONLY plaintext password (no hashed password support)
+      if (userData.password === password && userData.password !== 'hashed password') {
+        // Create session token with 3-hour expiration
+        const sessionData = {
+          user_id: userData.id,
+          username: userData.username,
+          role: userData.role,
+          khoa_phong: userData.khoa_phong,
+          full_name: userData.full_name,
+          created_at: Date.now(),
+          expires_at: Date.now() + (3 * 60 * 60 * 1000) // 3 hours in milliseconds
+        };
 
-      // Safe Base64 encode for Unicode characters
-      const sessionToken = safeBase64Encode(JSON.stringify(sessionData));
-      localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
-      setUser(userData);
+        // Safe Base64 encode for Unicode characters
+        const sessionToken = safeBase64Encode(JSON.stringify(sessionData));
+        localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
+        setUser(userData);
 
-      const authModeText = authResult.authentication_mode === 'hashed' ? '🔐 Secure' : '⚠️ Legacy';
         toast({
           title: "Đăng nhập thành công",
-        description: `Chào mừng ${userData.full_name || userData.username}! (${authModeText})`,
+          description: `Chào mừng ${userData.full_name || userData.username}! (⚠️ Legacy Mode)`,
         });
 
         router.push("/dashboard");
         return true;
+      }
 
-    } catch (error: any) {
-      console.error("Enhanced authentication failed, trying fallback:", error);
-
-      // 🔄 FALLBACK: Use direct database query for backward compatibility
-      try {
-        console.log("Trying fallback authentication method...");
-
-        const { data: fallbackData, error: fallbackError } = await supabase!
-          .from('nhan_vien')
-          .select('*')
-          .eq('username', username.trim())
-          .single();
-
-        if (fallbackError || !fallbackData) {
-          console.error("Fallback user lookup failed:", fallbackError);
-          toast({
-            variant: "destructive",
-            title: "Đăng nhập thất bại",
-            description: "Tên đăng nhập hoặc mật khẩu không đúng.",
-          });
-          return false;
-        }
-
-        // 🚨 SECURITY: Block login attempts with suspicious strings
-        if (password === 'hashed password' || 
-            password.includes('hash') || 
-            password.includes('crypt') || 
-            password.length > 200) {
-          console.warn('Security: Blocked login attempt with suspicious password');
-          toast({
-            variant: "destructive",
-            title: "Đăng nhập thất bại",
-            description: "Thông tin đăng nhập không hợp lệ.",
-          });
-          return false;
-        }
-
-        // Check password (fallback method)
-        if (fallbackData.password === password) {
-          // Old method worked, create session manually
-          localStorage.setItem(SESSION_TOKEN_KEY, `fallback_${Date.now()}`);
-          setUser(fallbackData);
-
-          toast({
-            title: "Đăng nhập thành công",
-            description: `Chào mừng ${fallbackData.full_name || fallbackData.username}! (Compatibility mode)`,
-          });
-
-          router.push("/dashboard");
-          return true;
-        }
-
-        // Password incorrect
+      // Password incorrect or user has hashed password (not supported in legacy mode)
+      if (userData.password === 'hashed password') {
+        toast({
+          variant: "destructive",
+          title: "Tài khoản không hỗ trợ",
+          description: "Tài khoản này sử dụng mật khẩu mã hóa không được hỗ trợ trong chế độ legacy.",
+        });
+      } else {
         toast({
           variant: "destructive",
           title: "Đăng nhập thất bại",
           description: "Tên đăng nhập hoặc mật khẩu không đúng.",
         });
-        return false;
+      }
+      return false;
 
-      } catch (fallbackError) {
-        console.error("Fallback authentication also failed:", fallbackError);
+    } catch (error) {
+      console.error("Legacy authentication failed:", error);
       toast({
         variant: "destructive",
         title: "Lỗi đăng nhập",
-          description: "Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.",
+        description: "Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.",
       });
       return false;
-      }
     } finally {
       setIsLoading(false);
     }

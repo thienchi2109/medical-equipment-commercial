@@ -76,8 +76,8 @@ export default function LoginPage() {
           <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-primary to-accent px-8 py-6 text-center">
-              <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Logo />
+              <div className="flex items-center justify-center mx-auto mb-4">
+                <Logo size="lg" priority={true} />
               </div>
               <h1 className="text-2xl font-bold text-primary-foreground">QUẢN LÝ THIẾT BỊ Y TẾ</h1>
               <p className="text-primary-foreground/80 mt-2">{t("login.subtitle") || "Đăng nhập vào hệ thống"}</p>
@@ -195,7 +195,7 @@ export default function LoginPage() {
             <div className="mt-6 lg:mt-12 text-center lg:text-left">
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 lg:p-6">
                 <h4 className="font-semibold text-accent mb-2">
-                  🏥 Dành cho Trung tâm Kiểm soát bệnh tật TP. Cần Thơ
+                  
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Được thiết kế đặc biệt để đáp ứng nhu cầu quản lý thiết bị y tế chuyên nghiệp,
@@ -212,8 +212,8 @@ export default function LoginPage() {
             <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
               {/* Header */}
               <div className="bg-gradient-to-r from-primary to-accent px-8 py-6 text-center">
-                <div className="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Logo />
+                <div className="flex items-center justify-center mx-auto mb-4">
+                  <Logo size="lg" priority={true} />
                 </div>
                 <h1 className="text-2xl font-bold text-primary-foreground">QUẢN LÝ THIẾT BỊ Y TẾ</h1>
                 <p className="text-primary-foreground/80 mt-2">{t("login.subtitle") || "Đăng nhập vào hệ thống"}</p>
