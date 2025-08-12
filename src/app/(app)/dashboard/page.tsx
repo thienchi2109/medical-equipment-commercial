@@ -21,6 +21,7 @@ import { KPICards } from "@/components/dashboard/kpi-cards"
 import { EquipmentAttentionTable } from "@/components/dashboard/equipment-attention-table"
 import { MaintenancePlansTable } from "@/components/dashboard/maintenance-plans-table"
 import { useDashboardRealtimeSync } from "@/hooks/use-realtime-sync"
+import { DriveSettingsBanner } from "@/components/drive-settings-banner"
 
 export default function Dashboard() {
   // Temporarily disable useRealtimeSync to avoid conflict with RealtimeProvider
@@ -28,6 +29,9 @@ export default function Dashboard() {
 
   return (
     <>
+      {/* Google Drive Settings Banner */}
+      <DriveSettingsBanner />
+
       {/* KPI Cards */}
       <KPICards />
 

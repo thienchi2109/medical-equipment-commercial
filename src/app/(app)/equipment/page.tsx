@@ -109,6 +109,7 @@ import { MobileUsageActions } from "@/components/mobile-usage-actions"
 import { useSearchDebounce } from "@/hooks/use-debounce"
 import { EquipmentFilterStatus } from "@/components/department-filter-status"
 import { MobileEquipmentListItem } from "@/components/mobile-equipment-list-item"
+import { useDriveSettings } from "@/hooks/use-drive-settings"
 
 type Attachment = {
   id: string;
@@ -333,6 +334,9 @@ export default function EquipmentPage() {
   // State for attachments
   const [attachments, setAttachments] = React.useState<Attachment[]>([]);
   const [isLoadingAttachments, setIsLoadingAttachments] = React.useState(false);
+  
+  // Google Drive settings
+  const { getFolderUrl, getFolderName, isConfigured } = useDriveSettings();
   const [newFileName, setNewFileName] = React.useState("");
   const [newFileUrl, setNewFileUrl] = React.useState("");
   const [isSubmittingAttachment, setIsSubmittingAttachment] = React.useState(false);
@@ -1419,10 +1423,16 @@ export default function EquipmentPage() {
                                             <AlertTitle>Làm thế nào để lấy URL?</AlertTitle>
                                             <AlertDescription>
                                                 Tải file của bạn lên{" "}
-                                                <a href="https://drive.google.com/open?id=1-lgEygGCIfxCbIIdgaCmh3GFJgAMr63e&usp=drive_fs" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
-                                                    thư mục Drive chung
+                                                <a href={getFolderUrl()} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+                                                    {getFolderName()}
                                                 </a>
                                                 , sau đó lấy link chia sẻ công khai và dán vào đây.
+                                                {!isConfigured && (
+                                                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                                                        <strong>Lưu ý:</strong> Hiện tại đang sử dụng thư mục mặc định. 
+                                                        Vui lòng truy cập trang <strong>Cài đặt</strong> để cấu hình thư mục Google Drive của riêng bạn.
+                                                    </div>
+                                                )}
                                             </AlertDescription>
                                         </Alert>
                                         <Button type="submit" disabled={isSubmittingAttachment || !newFileName || !newFileUrl}>

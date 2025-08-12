@@ -124,6 +124,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       baseItems.push({ href: "/users", icon: Users, label: "Người dùng" })
     }
 
+    // Add settings page for admin and to_qltb roles
+    if (user?.role === 'admin' || user?.role === 'to_qltb') {
+      baseItems.push({ href: "/settings", icon: Settings, label: "Cài đặt" })
+    }
+
     return baseItems
   }, [user?.role])
 

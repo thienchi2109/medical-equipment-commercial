@@ -13,6 +13,7 @@ import {
   BarChart3,
   QrCode,
   Users,
+  Settings,
 } from "lucide-react"
 
 import {
@@ -49,6 +50,11 @@ export function MobileFooterNav() {
     // Add admin-only items with role-based permissions
     if (user?.role === 'admin') {
       baseItems.push({ href: "/users", icon: Users, label: "Người dùng" })
+    }
+
+    // Add settings page for admin and to_qltb roles
+    if (user?.role === 'admin' || user?.role === 'to_qltb') {
+      baseItems.push({ href: "/settings", icon: Settings, label: "Cài đặt" })
     }
 
     return baseItems
