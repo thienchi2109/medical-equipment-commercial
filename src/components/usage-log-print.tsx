@@ -258,16 +258,25 @@ export function UsageLogPrint({ equipment }: UsageLogPrintProps) {
           .signature-section {
             text-align: center;
           }
-          
+
           .signature-title {
             font-weight: bold;
-            margin-bottom: 50px;
+            margin-bottom: 10px;
           }
-          
+
+          .signature-space {
+            height: 60px;
+            margin-bottom: 5px;
+          }
+
           .signature-line {
             border-top: 1px solid #000;
-            margin-top: 50px;
-            padding-top: 5px;
+            margin-bottom: 5px;
+          }
+
+          .signature-label {
+            font-size: 12px;
+            color: #666;
           }
           
           .print-info {
@@ -284,9 +293,9 @@ export function UsageLogPrint({ equipment }: UsageLogPrintProps) {
       <body>
         <div class="content-body">
         <div class="header">
-          <img src="https://i.postimg.cc/W1ym4T74/cdc-logo-150.png" alt="Logo CDC" class="header-logo" onerror="this.onerror=null;this.src='https://i.postimg.cc/W1ym4T74/cdc-logo-150.png';">
+          <img src="https://i.postimg.cc/HksZPJ5g/2e5964f6128d9ad3c39c.jpg" alt="Logo CDC" class="header-logo" onerror="this.onerror=null;this.src='https://i.postimg.cc/HksZPJ5g/2e5964f6128d9ad3c39c.jpg';">
           <div class="header-content">
-            <h2 style="font-size: 14px; font-weight: bold; margin: 0 0 5px 0; text-transform: uppercase;">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
+            <h2 style="font-size: 24px; font-weight: bold; margin: 0 0 5px 0; text-transform: uppercase;">HOÀN MỸ GOLD KỲ ĐỒNG</h2>
             <h1>NHẬT KÝ SỬ DỤNG THIẾT BỊ</h1>
             <h2>${equipment.ten_thiet_bi}</h2>
             <div>Mã thiết bị: ${equipment.ma_thiet_bi} ${dateRange}</div>
@@ -357,11 +366,15 @@ export function UsageLogPrint({ equipment }: UsageLogPrintProps) {
         <div class="footer">
           <div class="signature-section">
             <div class="signature-title">Người lập báo cáo</div>
-            <div class="signature-line">Ký tên</div>
+            <div class="signature-label">(Ký tên)</div>
+            <div class="signature-space"></div>
+            <div class="signature-line"></div>
           </div>
           <div class="signature-section">
             <div class="signature-title">Phụ trách thiết bị</div>
-            <div class="signature-line">Ký tên</div>
+            <div class="signature-label">(Ký tên)</div>
+            <div class="signature-space"></div>
+            <div class="signature-line"></div>
           </div>
         </div>
         
@@ -370,12 +383,7 @@ export function UsageLogPrint({ equipment }: UsageLogPrintProps) {
         </div>
         </div>
 
-        <!-- Footer -->
-        <footer class="print-footer">
-          <span>QLTB-BM.06</span>
-          <span>BH.01 (05/2024)</span>
-          <span>Trang: 1/1</span>
-        </footer>
+
       </body>
       </html>
     `

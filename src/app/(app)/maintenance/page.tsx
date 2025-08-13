@@ -1515,10 +1515,10 @@ export default function MaintenancePage() {
             <header>
                  <div class="flex justify-between items-start">
                     <div class="text-center w-1/4">
-                        <img src="https://i.postimg.cc/W1ym4T74/cdc-logo-150.png" alt="Logo CDC" class="w-16" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/e2e8f0?text=Logo';">
+                        <img src="https://i.postimg.cc/HksZPJ5g/2e5964f6128d9ad3c39c.jpg" alt="Logo CDC" class="w-16" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/e2e8f0?text=Logo';">
                     </div>
                     <div class="text-center w-1/2">
-                         <h2 class="title-sub uppercase font-bold">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
+                         <h2 class="title-sub uppercase font-bold" style="font-size: 24px;">HOÀN MỸ GOLD KỲ ĐỒNG</h2>
                          <div class="flex items-baseline justify-center font-bold text-base">
                             <label for="department-name">KHOA/PHÒNG:</label>
                             <input type="text" id="department-name" class="form-input-line flex-grow ml-2" value="${formatValue(selectedPlan.khoa_phong)}">
@@ -1592,17 +1592,7 @@ export default function MaintenancePage() {
             </section>
         </div>
 
-        <!-- Footer -->
-        <footer class="print-footer flex justify-between items-center text-xs">
-            <span>QLTB-BM.09</span>
-            <span>BH.01 (05/2024)</span>
-            <div class="flex items-center">
-                <span>Trang: </span>
-                <input type="text" class="form-input-line w-8 mx-1 text-center" value="1" placeholder="1" title="Nhập số trang hiện tại">
-                <span>/</span>
-                <input type="text" class="form-input-line w-8 mx-1 text-center" value="1" placeholder="1" title="Nhập tổng số trang">
-            </div>
-        </footer>
+
 
         <!-- Page numbering notice (only visible on screen, hidden when printing) -->
         <div class="page-numbering-notice bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mt-4 print:hidden">

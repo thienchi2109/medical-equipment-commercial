@@ -899,10 +899,10 @@ export default function RepairRequestsPage() {
               <header class="text-center mb-8">
                   <div class="flex justify-between items-start">
                       <div class="text-center">
-                          <img src="https://i.postimg.cc/W1ym4T74/cdc-logo-150.png" alt="Logo CDC" class="w-[70px] mx-auto mb-1" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/e2e8f0?text=Logo';">
+                          <img src="https://i.postimg.cc/HksZPJ5g/2e5964f6128d9ad3c39c.jpg" alt="Logo CDC" class="w-[70px] mx-auto mb-1" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/e2e8f0?text=Logo';">
                       </div>
                       <div class="flex-grow">
-                          <h2 class="title-sub uppercase font-bold">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
+                          <h2 class="title-sub uppercase font-bold" style="font-size: 24px;">HOÀN MỸ GOLD KỲ ĐỒNG</h2>
                           <h1 class="title-main uppercase mt-4 font-bold">PHIẾU ĐỀ NGHỊ SỬA CHỮA THIẾT BỊ</h1>
                       </div>
                       <div class="w-16"></div> <!-- Spacer -->
@@ -995,11 +995,7 @@ export default function RepairRequestsPage() {
                       <input type="text" id="repairer-name" class="signature-name-input">
                   </div>
               </div>
-              <footer class="mt-12 flex justify-between items-center text-xs text-gray-500">
-                  <span>QLTB-BM.07</span>
-                  <span>BH.01 (05/2024)</span>
-                  <span>Trang: 1/2</span>
-              </footer>
+
           </div>
 
           <!-- Page 2: Repair Result Form -->
@@ -1009,10 +1005,10 @@ export default function RepairRequestsPage() {
                   <header class="text-center mb-8">
                       <div class="flex items-center">
                           <div class="text-center">
-                              <img src="https://i.postimg.cc/W1ym4T74/cdc-logo-150.png" alt="Logo CDC" class="w-[70px] mx-auto mb-1" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/e2e8f0?text=Logo';">
+                              <img src="https://i.postimg.cc/HksZPJ5g/2e5964f6128d9ad3c39c.jpg" alt="Logo CDC" class="w-[70px] mx-auto mb-1" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/e2e8f0?text=Logo';">
                           </div>
                           <div class="flex-grow">
-                              <h2 class="title-sub uppercase font-bold">TRUNG TÂM KIỂM SOÁT BỆNH TẬT THÀNH PHỐ CẦN THƠ</h2>
+                              <h2 class="title-sub uppercase font-bold" style="font-size: 24px;">HOÀN MỸ GOLD KỲ ĐỒNG</h2>
                           </div>
                           <div class="w-16"></div> <!-- Spacer -->
                       </div>
@@ -1052,12 +1048,7 @@ export default function RepairRequestsPage() {
                   </section>
               </div>
 
-              <!-- Footer -->
-              <footer class="print-footer flex justify-between items-center text-xs">
-                  <span>QLTB-BM.07</span>
-                  <span>BH.01 (05/2024)</span>
-                  <span>Trang: 2/2</span>
-              </footer>
+
           </div>
       </body>
       </html>
