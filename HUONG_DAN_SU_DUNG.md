@@ -335,7 +335,7 @@ Sau khi quét thành công, bạn có thể:
 
 **Các vai trò**:
 - **Quản trị hệ thống**: Toàn quyền
-- **Tổ QLTB CDC**: Quản lý cấp cao
+- **Biomed**: Quản lý cấp cao
 - **QLTB Khoa/Phòng**: Quản lý cấp khoa
 - **Nhân viên**: Quyền cơ bản
 

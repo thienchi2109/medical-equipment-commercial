@@ -265,7 +265,7 @@ COMMENT ON TABLE nhan_vien IS 'Bảng quản lý tài khoản nhân viên';
 COMMENT ON COLUMN nhan_vien.username IS 'Tên đăng nhập (duy nhất)';
 COMMENT ON COLUMN nhan_vien.password IS 'Mật khẩu (plain text)';
 COMMENT ON COLUMN nhan_vien.full_name IS 'Họ và tên đầy đủ';
-COMMENT ON COLUMN nhan_vien.role IS 'Vai trò: admin (Quản trị hệ thống), to_qltb (Tổ QLTB CDC), qltb_khoa (QLTB Khoa/Phòng), user (Nhân viên)';
+COMMENT ON COLUMN nhan_vien.role IS 'Vai trò: admin (Quản trị hệ thống), to_qltb (Biomed), qltb_khoa (QLTB Khoa/Phòng), user (Nhân viên)';
 COMMENT ON COLUMN nhan_vien.khoa_phong IS 'Khoa/Phòng làm việc';
 
 -- Create index for faster username lookup

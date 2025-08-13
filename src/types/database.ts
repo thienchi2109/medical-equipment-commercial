@@ -32,7 +32,7 @@ export interface User {
 
 export const USER_ROLES = {
   admin: 'Quản trị hệ thống',
-  to_qltb: 'Tổ QLTB CDC', 
+  to_qltb: 'Biomed',
   qltb_khoa: 'QLTB Khoa/Phòng',
   user: 'Nhân viên'
 } as const;
